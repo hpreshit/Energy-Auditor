@@ -1,1 +1,1 @@
-# Low_Power_Embedded_Design
+# Low Power Embedded Design Techniques
