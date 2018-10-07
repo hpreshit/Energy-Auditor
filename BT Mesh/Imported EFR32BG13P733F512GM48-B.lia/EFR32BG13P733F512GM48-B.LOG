@@ -1,0 +1,29 @@
+PCAD Importer Log
+Project : EFR32BG13P733F512GM48-B.LibPkg
+
+Section : C:\Users\Preshit\Documents\GitHub\Low_Power_Embedded_Design\BT Mesh\EFR32BG13P733F512GM48-B.lia
+    Section : PCB Library - EFR32BG13P733F512GM48-B.PcbLib
+        Section : Load Messages
+            Warning - 1 : Skipping Token EFR32BG13P733F512GM48-B On Line 201
+            Warning - 1 : Skipping Token attachedSymbol On Line 718
+        EndSection
+
+        Section : Import Messages
+        EndSection
+    EndSection
+
+    Section : SCH Library - EFR32BG13P733F512GM48-B.SchLib
+        Section : Parsing Messages
+            Warning - 1 : Skipping Token padStyleDef On Line 9
+            Warning - 1 : Skipping Token padStyleDef On Line 21
+            Warning - 1 : Skipping Token multiLayer On Line 96
+            Warning - 1 : Skipping Token layerContents On Line 147
+            Warning - 1 : Skipping Token layerContents On Line 173
+            Warning - 1 : Skipping Token layerContents On Line 184
+            Warning - 1 : Skipping Token layerContents On Line 190
+        EndSection
+
+        Section : Generating SCH Library - EFR32BG13P733F512GM48-B.SchLib
+        EndSection
+    EndSection
+EndSection
