@@ -1,0 +1,27 @@
+PCAD Importer Log
+Project : ECS-.327-12.5-34R-C-TR.LibPkg
+
+Section : C:\Users\Preshit\Documents\GitHub\Low-Power-Embedded-Design\BT Mesh\ECS-.327-12.5-34R-C-TR.lia
+    Section : PCB Library - ECS-.327-12.5-34R-C-TR.PcbLib
+        Section : Load Messages
+            Warning - 1 : Skipping Token ECS-.327-12.5-34R-C-TR On Line 110
+            Warning - 1 : Skipping Token attachedSymbol On Line 161
+        EndSection
+
+        Section : Import Messages
+        EndSection
+    EndSection
+
+    Section : SCH Library - ECS-.327-12.5-34R-C-TR.SchLib
+        Section : Parsing Messages
+            Warning - 1 : Skipping Token padStyleDef On Line 9
+            Warning - 1 : Skipping Token multiLayer On Line 84
+            Warning - 1 : Skipping Token layerContents On Line 88
+            Warning - 1 : Skipping Token layerContents On Line 97
+            Warning - 1 : Skipping Token layerContents On Line 103
+        EndSection
+
+        Section : Generating SCH Library - ECS-.327-12.5-34R-C-TR.SchLib
+        EndSection
+    EndSection
+EndSection
