@@ -1,5 +1,4 @@
 # Energy Auditor
-----
 
 ## Low Power Embedded Design Techniques Course Project  
 ## Project Idea  
