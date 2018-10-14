@@ -1,2 +1,3 @@
-$GIT_DIR/Sensor Node Source Code/Current-Sensor-BLE-Server/GNU ARM v7.2.1 - Default/*.o
-$GIT_DIR/Sensor Node Source Code/Current-Sensor-BLE-Server/GNU ARM v7.2.1 - Default/*.d
+**.o
+**.d
+**.map
