@@ -107,7 +107,7 @@ GenerateClassCluster=0
 DocumentUniqueId=RBKDNCEN
 
 [Document5]
-DocumentPath=sensor.SchDoc
+DocumentPath=Sensor.SchDoc
 AnnotationEnabled=1
 AnnotateStartValue=1
 AnnotationIndexControlEnabled=0
@@ -121,7 +121,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=WPFNTAPS
+DocumentUniqueId=JUGQTPQI
 
 [Configuration1]
 Name=Sources
