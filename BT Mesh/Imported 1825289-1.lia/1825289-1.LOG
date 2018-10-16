@@ -1,0 +1,31 @@
+PCAD Importer Log
+Project : 1825289-1.LibPkg
+
+Section : C:\Users\Preshit\Documents\GitHub\Low-Power-Embedded-Design\BT Mesh\1825289-1.lia
+    Section : PCB Library - 1825289-1.PcbLib
+        Section : Load Messages
+            Warning - 1 : Skipping Token 1825289-1 On Line 150
+            Warning - 1 : Skipping Token attachedSymbol On Line 275
+        EndSection
+
+        Section : Import Messages
+            Warning - 0 : PCAD Pattern Graphics [SW_1825289-1][Primary] associated with PCAD Component [1825289-1] has been renamed to PCB FootPrint [SW_1825289-1_1825289-1(Primary)].
+        EndSection
+    EndSection
+
+    Section : SCH Library - 1825289-1.SchLib
+        Section : Parsing Messages
+            Warning - 1 : Skipping Token padStyleDef On Line 9
+            Warning - 1 : Skipping Token padStyleDef On Line 21
+            Warning - 1 : Skipping Token padStyleDef On Line 33
+            Warning - 1 : Skipping Token multiLayer On Line 108
+            Warning - 1 : Skipping Token layerContents On Line 118
+            Warning - 1 : Skipping Token layerContents On Line 127
+            Warning - 1 : Skipping Token layerContents On Line 141
+        EndSection
+
+        Section : Generating SCH Library - 1825289-1.SchLib
+            Warning - 0 : PCAD Pattern Graphics [SW_1825289-1][Primary] associated with PCAD Component [1825289-1] has been renamed to PCB FootPrint [SW_1825289-1_1825289-1(Primary)].
+        EndSection
+    EndSection
+EndSection
