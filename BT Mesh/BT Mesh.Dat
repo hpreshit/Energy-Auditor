@@ -1,0 +1,44 @@
+﻿Field=#~Integer~#~50|Field=Designator~String~Designator~100|Field=Value~String~Value~100|Field=Description~String~Description~100|Field=Manufacturer~String~Manufacturer~100|Field=Manufacturer Part Number~String~Manufacturer Part Number~100|Field=Digi-Key Part Number~String~Digi-Key Part Number~100|Field=Quantity~Integer~Quantity~100|ReportField=Currency~<none>|ReportField=ProductionQuantity~1|ReportField=ProjectFileName~BT Mesh.PrjPcb|ReportField=ProjectFullPath~C:\Users\Preshit\Documents\GitHub\Low-Power-Embedded-Design\BT Mesh\BT Mesh.PrjPcb|ReportField=Title~Bill of Materials For Project [BT Mesh.PrjPcb] (No PCB Document Selected)|ReportField=TotalQuantity~69|ReportField=ReportTime~10:52:38 PM|ReportField=ReportDate~10/16/2018|ReportField=ReportDateTime~10/16/2018 10:52:38 PM|ReportField=OutputName~Bill of Materials|ReportField=OutputType~BOM_PartType|ReportField=GeneratorName~BOM|ReportField=GeneratorDescription~Bill of Materials|ReportField=VariantName~None|ReportField=Address1~|ReportField=Address2~|ReportField=Address3~|ReportField=Address4~|ReportField=Application_BuildNumber~|ReportField=ApprovedBy~|ReportField=Author~|ReportField=CheckedBy~|ReportField=CompanyName~|ReportField=CurrentDate~10/16/2018|ReportField=CurrentTime~8:07:05 PM|ReportField=Date~|ReportField=DocumentFullPathAndName~C:\Users\Preshit\Documents\GitHub\Low-Power-Embedded-Design\BT Mesh\Block Diagram.SchDoc|ReportField=DocumentName~Block Diagram.SchDoc|ReportField=DocumentNumber~|ReportField=DrawnBy~|ReportField=Engineer~|ReportField=ImagePath~|ReportField=ModifiedDate~10/6/2018|ReportField=Organization~|ReportField=ProjectName~BT Mesh.PrjPcb|ReportField=Revision~|ReportField=Rule~|ReportField=SheetNumber~|ReportField=SheetTotal~|ReportField=Time~|ReportField=Title~|ReportField=DataSourceFileName~BT Mesh.PrjPcb|ReportField=DataSourceFullPath~C:\Users\Preshit\Documents\GitHub\Low-Power-Embedded-Design\BT Mesh\BT Mesh.PrjPcb|ReportField=PCBConfigurationName~Sources|ReportField=Item~|ReportField=ItemRevision~|ReportField=ItemAndRevision~|ReportField=ItemRevisionBase~|ReportField=ItemRevisionLevel1~|ReportField=ItemRevisionLevel2~|ReportField=ItemRevisionLevel1AndBase~|ReportField=ItemRevisionLevel2AndLevel1~
+1|B1||Coin Cell Battery Holders SFC MNT FOR CR2450N||||1
+2|C1, C4, C11, C17, C18, C19|1uF|CAP CER 0.1UF 25V X7R 0603, CAP CER 1UF 25V X5R 0603, CAP CER 1UF 25V X5R 0603, CAP CER 1UF 25V X5R 0603, CAP CER 1UF 16V X7R 0603, CAP CER 1UF 16V X7R 0603|Murata Electronics North America, Murata Electronics North America, Murata Electronics North America, Murata Electronics North America, Samsung Electro-Mechanics, Samsung Electro-Mechanics|GCM188R71E104KA57D, GRT188R61E105ME13D, GRT188R61E105ME13D, GRT188R61E105ME13D, CL10B105MO8NNWC, CL10B105MO8NNWC|490-6051-1-ND, 490-12322-1-ND, 490-12322-1-ND, 490-12322-1-ND, 1276-6524-1-ND, 1276-6524-1-ND|6
+3|C2, C3, Cin, Coutx|10uF|CAP CER 10UF 25V X5R 1206, CAP CER 10UF 6.3V X5R 0603, CAP CER 10UF 6.3V X5R 0603, CAP CER 10UF 6.3V X5R 0603|Murata Electronics North America, Murata Electronics North America, Samsung Electro-Mechanics, Samsung Electro-Mechanics|GJ831CR61E106KE83L, GRM188R60J106ME84D, CL10A106KQ8NNNC, CL10A106KQ8NNNC|490-14441-1-ND, 490-7316-1-ND, 1276-1038-1-ND, 1276-1038-1-ND|4
+4|C5, C6|10nF, 10uF|Capacitor, CAP CER 10UF 6.3V X5R 0603||||2
+5|C7, C9|10pF|CAP CER 10PF 50V C0G/NP0 0603|Johanson Dielectrics Inc.|500X14N100MV4T|709-1001-1-ND|2
+6|C8|100pF|CAP CER 0.1UF 16V X7R 0603|AVX Corporation|0603YC104MAT4A|478-7617-1-ND|1
+7|C10|220nF|CAP CER 0.22UF 16V X7R 0603|TDK Corporation|CGA3E2X7R1C224M080AD|445-9810-1-ND|1
+8|C12|4.7uF|CAP CER 4.7UF 16V X5R 0603|Taiyo Yuden|EMK107ABJ475MA-T|587-6003-1-ND|1
+9|C13|100nF|CAP CER 0.1UF 16V X7R 0603|AVX Corporation|0603YC104MAT4A|478-7617-1-ND|1
+10|C14, C15|1nF|CAP CER 1000PF 50V X7R 0603|AVX Corporation|06035C102JAT2A|478-5006-1-ND|2
+11|C16|1.5pF|CAP CER 1.5PF 50V C0G/NP0 0402|Murata Electronics North America|GRM1555C1H1R5WA01D|490-6213-1-ND|1
+12|Css|1.3nF|CAP CER 1300PF 25V C0G/NP0 0603|KEMET|C0603C132J3GAC7867|399-14953-1-ND|1
+13|D1, D2||Blue 470nm LED Indication - Discrete 2.85V 0603 (1608 Metric), LED GREEN DIFFUSED 0603 SMD|OSRAM Opto Semiconductors Inc.|LB Q39G-L2OO-35-1, LG L29K-F2J1-24-Z|475-2816-1-ND, 475-3118-1-ND|2
+14|D3||Zener Diode||||1
+15|J?||AUDIO JACK, 3.5 MM, RT, 4 CONDUC|CUI Inc.|SJ2-35043C-SMT-TR|CP-SJ2-35043C-SMT-CT-ND|1
+16|L1|1.5uH|FIXED IND 1.5UH 1.1A 213 MOHM|Murata Electronics North America|LQM18PN1R5MFHD|490-15637-1-ND|1
+17|L2, L7|1.9nH|FIXED IND 1.9NH 220MA 300 MOHM|Murata Electronics North America|LQP15MN1N9W02D|490-11739-1-ND|2
+18|L3|CBF102WB|FERRITE BEAD 1 KOHM 0603 1LN|Wurth Electronics Inc.|74279266|732-4484-1-ND|1
+19|L4, L5|BLM18AG601SN1|FERRITE BEAD 600 OHM 0603 1LN|Murata Electronics North America|BLM18AG601SN1D|490-1014-1-ND|2
+20|L6|4.7uH|FIXED IND 1.9NH 220MA 300 MOHM|Murata Electronics North America|LQP15MN1N9W02D|490-11739-1-ND|1
+21|P1, P2, P3, P4, P5, P9||Header, 2-Pin||||6
+22|P6||Header, 3-Pin||||1
+23|P8||Conn Micro USB Type AB RCP 5 POS 0.65mm Solder RA SMD 5 Terminal 1 Port Embossed T/R|Molex, LLC|0475901001|WM14336CT-ND|1
+24|P10||Header, 6-Pin||||1
+25|P11||Header, 10-Pin||||1
+26|R1, R7|10K|RES SMD 10K OHM 1% 1/8W 0603|Vishay Beyschlag|MCT06030C1002FP500|MCT0603-10.0K-CFCT-ND|2
+27|R2|8.9K|RES SMD 8.87KOHM 0.5% 1/10W 0603|Yageo|RT0603DRD078K87L|311-8.87KDCT-ND|1
+28|R3|3.3K|RES SMD 3.3K OHM 5% 1/10W 0603|Panasonic Electronic Components|ERJ-3GEYJ332V|P3.3KGCT-ND|1
+29|R4, R8, Rpg|100K|RES SMD 3.3K OHM 5% 1/10W 0603, RES SMD 3.3K OHM 5% 1/10W 0603, RES SMD 100K OHM 0.1% 1/10W 0603|Panasonic Electronic Components, Panasonic Electronic Components, Susumu|ERJ-3GEYJ332V, ERJ-3GEYJ332V, RG1608P-104-B-T5|P3.3KGCT-ND, P3.3KGCT-ND, RG16P100KBCT-ND|3
+30|R5, R6|1K|RES SMD 1K OHM 1% 1/8W 0603|Vishay Beyschlag||Digi-Key Part Number|2
+31|R9, R10|1M|RES SMD 1M OHM 5% 1/10W 0603|Samsung Electro-Mechanics|RC1608J105CS|1276-5134-1-ND|2
+32|R11, R12|100R|RES SMD 100 OHM 5% 1/10W 0603|Vishay Dale|CRCW0603100RJNEAC|541-4059-1-ND|2
+33|R13|0R|RES 0 OHM JUMPER 1/8W 0603|Vishay Beyschlag|MCT0603MZ0000ZP500|749-1745-1-ND|1
+34|R14|1R|RES SMD 1 OHM 1% 1/16W 0402|Yageo|RC0402FR-071RL|311-1.00LRCT-ND|1
+35|R15|330|RES SMD 330 OHM 5% 1/10W 0603|Vishay Dale|CRCW0603330RJNEAC|541-4060-1-ND|1
+36|S1||SWITCH SLIDE SPDT 100MA 12V|C&K|AYZ0102AGRLC|401-2012-1-ND|1
+37|S2||MHS22204=DPDT SL SW VERT AG||||1
+38|S3, S4||SWITCH TACTILE SPST-NO 0.05A 12V, WS-TASV SPST 50 mA 12 V 160 gf Top 4.3 mm Actuated Gull Wing Tactile Switch|Wurth Electronics|430182043816|732-7004-1-ND|2
+39|U1||IC LI-ION CHARGE MGMT 16-QFN|Texas Instruments||BQ24075RGTR|1
+40|U2||Tiny Single Inductor Buck Boost Converter 12-VQFN -40 to 85|Texas Instruments|TPS63051RMWR|296-42650-1-ND|1
+41|U3||EFR32BG13 Blue Gecko BluetoothÂ® Low Energy SoC|Silicon Labs|EFR32BG13P733F512GM48-C|336-4110-ND|1
+42|X1||Crystal 38.4mhz 8pf Smd|ECS Inc.|ECS-384-8-36-CKY-TR|XC2538CT-ND|1
+43|X2||CRYSTAL 32.768KHZ 12.5PF SMD|ECS International|ECS-.327-12.5-34R-C-TR|XC2127CT-ND|1
