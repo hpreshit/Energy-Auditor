@@ -123,6 +123,23 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=RYMMAOGS
 
+[Document6]
+DocumentPath=Gecko_IO.SchDoc
+AnnotationEnabled=1
+AnnotateStartValue=1
+AnnotationIndexControlEnabled=0
+AnnotateSuffix=
+AnnotateScope=All
+AnnotateOrder=-1
+DoLibraryUpdate=1
+DoDatabaseUpdate=1
+ClassGenCCAutoEnabled=1
+ClassGenCCAutoRoomEnabled=1
+ClassGenNCAutoScope=None
+DItemRevisionGUID=
+GenerateClassCluster=0
+DocumentUniqueId=DFNPACOA
+
 [SearchPath1]
 Path=Imported BGA12N40P3X4_128X202X60N.lia\*.*
 IncludeSubFolders=1
