@@ -7,7 +7,7 @@ ChannelDesignatorFormatString=$Component_$RoomName
 ChannelRoomLevelSeperator=_
 OpenOutputs=1
 ArchiveProject=0
-TimestampOutput=0
+TimestampOutput=1
 SeparateFolders=0
 TemplateLocationPath=
 PinSwapBy_Netlabel=1
@@ -53,7 +53,7 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=EHHUBKDT
+DocumentUniqueId=XXJKBTIV
 
 [Document2]
 DocumentPath=5019.SchLib
@@ -70,11 +70,14 @@ ClassGenCCAutoRoomEnabled=1
 ClassGenNCAutoScope=None
 DItemRevisionGUID=
 GenerateClassCluster=0
-DocumentUniqueId=UNIQLVVC
+DocumentUniqueId=HLOCEOQB
 
 [GeneratedDocument1]
 DocumentPath=5019.LOG
 DItemRevisionGUID=
+
+[Generic_IntLibOptions]
+OldFormat=False
 
 [OutputGroup1]
 Name=Netlist Outputs
