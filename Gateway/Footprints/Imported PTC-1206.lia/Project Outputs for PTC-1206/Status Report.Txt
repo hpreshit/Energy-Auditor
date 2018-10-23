@@ -1,0 +1,9 @@
+Output: Bill of Materials
+Type  : BOM
+From  : Variant [[No Variations]] of Project [PTC-1206.LibPkg]
+
+
+Files Generated   : 0
+Documents Printed : 0
+
+Finished Output Generation At 12:18:35 AM On 10/23/2018
