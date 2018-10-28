@@ -141,7 +141,7 @@ int main(void)
     			   * tells the timer to run for 1 second (32.768 kHz oscillator), the 2nd parameter is
     			   * the timer handle and the 3rd parameter '0' tells the timer to repeat continuously until
     			   * stopped manually.*/
-    			  gecko_cmd_hardware_set_soft_timer(700, 0, 0);
+    			  gecko_cmd_hardware_set_soft_timer(328, 0, 0);
     		  } else if (evt->data.evt_gatt_server_characteristic_status.client_config_flags == 0x00) {
     			  /* Indications have been turned OFF - stop the timer. */
     			  gecko_cmd_hardware_set_soft_timer(0, 0, 0);
