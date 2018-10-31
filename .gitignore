@@ -3,3 +3,4 @@
 **/__Previews/*.SchDocPreview
 **/History/
 *.PcbDocPreview
+**/__Previews/*.PcbDocPreview
