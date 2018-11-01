@@ -4,3 +4,4 @@
 **/History/
 *.PcbDocPreview
 **/__Previews/*.PcbDocPreview
+Gateway/__Previews/Gateway.PcbDocPreview
