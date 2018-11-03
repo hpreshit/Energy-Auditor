@@ -560,7 +560,7 @@ Configuration4_Item3=OpenExported=False|AddToProject=False|ForceFit=False|NotFit
 Configuration4_Name4=GroupOrder
 Configuration4_Item4=Manufacturer Part Number=True|Comment=True|Footprint=True
 Configuration4_Name5=SortOrder
-Configuration4_Item5=Digi-Key Part Number=Up
+Configuration4_Item5=Value=Up
 Configuration4_Name6=VisibleOrder
 Configuration4_Item6=Description=100|Designator=100|Digi-Key Part Number=134|Manufacturer Part Number=160|Quantity=68
 OutputType5=ComponentCrossReference
