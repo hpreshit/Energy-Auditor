@@ -191,6 +191,10 @@ DItemRevisionGUID=
 GenerateClassCluster=0
 DocumentUniqueId=TTFUJRUO
 
+[GeneratedDocument1]
+DocumentPath=Project Outputs for BT Mesh\Design Rule Check - BT Mesh.html
+DItemRevisionGUID=
+
 [SearchPath1]
 Path=Sch and Pcb Libraries\*.*
 IncludeSubFolders=1
