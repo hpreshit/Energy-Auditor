@@ -1,13 +1,19 @@
-Output: NC Drill Files
-Type  : NC Drill
-From  : Project [Gateway.PrjPcb]
-   Generated File[Gateway.TXT]
-   Generated File[Gateway.DRL]
-   Generated File[Gateway.LDP]
-   Generated File[Gateway.DRR]
+Output: Gerber Files
+Type  : Gerber
+From  : Variant [[No Variations]] of Project [Gateway.PrjPcb]
+   Generated File[Gateway.GTL]
+   Generated File[Gateway.GBL]
+   Generated File[Gateway.GTO]
+   Generated File[Gateway.GTS]
+   Generated File[Gateway.GBS]
+   Generated File[Gateway.GBP]
+   Generated File[Gateway.GBO]
+   Generated File[Gateway.RUL]
+   Generated File[Gateway.EXTREP]
+   Generated File[Gateway.REP]
 
 
-Files Generated   : 4
+Files Generated   : 10
 Documents Printed : 0
 
-Finished Output Generation At 2:57:02 PM On 11/13/2018
+Finished Output Generation At 10:57:34 PM On 11/13/2018
