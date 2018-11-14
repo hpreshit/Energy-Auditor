@@ -1,13 +1,13 @@
-Output: Gerber Files
-Type  : Gerber
-From  : Variant [[No Variations]] of Project [BT Mesh.PrjPcb]
-   Generated File[BT Mesh.GTP]
-   Generated File[BT Mesh.RUL]
-   Generated File[BT Mesh.EXTREP]
-   Generated File[BT Mesh.REP]
+Output: NC Drill Files
+Type  : NC Drill
+From  : Project [BT Mesh.PrjPcb]
+   Generated File[BT Mesh.TXT]
+   Generated File[BT Mesh.DRL]
+   Generated File[BT Mesh.LDP]
+   Generated File[BT Mesh.DRR]
 
 
 Files Generated   : 4
 Documents Printed : 0
 
-Finished Output Generation At 2:24:05 PM On 11/8/2018
+Finished Output Generation At 2:21:39 PM On 11/13/2018
