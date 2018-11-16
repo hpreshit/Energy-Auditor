@@ -1,5 +1,5 @@
 ----------------------------------------------------------------------------------------------------------------------------------
-NCDrill File Report For: BT Mesh.PcbDoc   11/13/2018  2:21:39 PM
+NCDrill File Report For: BT Mesh.PcbDoc   11/13/2018  9:10:48 PM
 ----------------------------------------------------------------------------------------------------------------------------------
 
 Layer Pair : Top Layer to Bottom Layer
@@ -8,7 +8,7 @@ EIA File   : BT Mesh.DRL
 
 Tool       Hole Size               Hole Tolerance               Hole Type       Hole Count   Plated         Tool Travel
 ----------------------------------------------------------------------------------------------------------------------------------
-T1      12mil (0.305mm)                                           Round             98        PTH        29.37inch (746.11mm)
+T1      12mil (0.305mm)                                           Round             98        PTH        29.67inch (753.70mm)
 T2      14mil (0.356mm)                                           Round             1         PTH        0.00inch (0.00mm)
 T3      35mil (0.9mm)                                             Round             28        PTH        8.91inch (226.28mm)
 T4      55mil (1.4mm)                                             Round             2         PTH        0.64inch (16.23mm)
