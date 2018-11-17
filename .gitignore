@@ -5,3 +5,4 @@
 *.PcbDocPreview
 **/__Previews/*.PcbDocPreview
 Gateway/__Previews/Gateway.PcbDocPreview
+Gateway/__Previews/*.PcbDocPreview
