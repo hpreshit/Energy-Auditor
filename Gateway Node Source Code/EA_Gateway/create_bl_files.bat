@@ -5,7 +5,7 @@
 
 :: use PATH_GCCARM env var to override default path for gcc-arm
 if "%PATH_GCCARM%"=="" (
-  set OBJCOPY="D:\SiliconLabs\SimplicityStudio\v4\developer\toolchains\gnu_arm\7.2_2017q4\bin\arm-none-eabi-objcopy.exe"
+  set OBJCOPY="D:\SiliconLabs\SimplicityStudio\v4\developer\toolchains\gnu_arm\4.9_2015q3\bin\arm-none-eabi-objcopy.exe"
 ) else (
   set OBJCOPY=%PATH_GCCARM%\bin\arm-none-eabi-objcopy.exe
 )

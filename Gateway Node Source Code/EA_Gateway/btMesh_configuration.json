@@ -10,11 +10,9 @@
       {
         "Name": "Primary Element",
         "Loc": "0x0000",
-        "NumS": "6",
+        "NumS": "7",
         "NumV": "0",
         "SIG Models": [
-          "0",
-          "Configuration Server",
           "2",
           "Health Server",
           "1001",
@@ -23,6 +21,10 @@
           "Light Lightness Client",
           "1305",
           "Light CTL Client",
+          "0",
+          "Configuration Server",
+          "1202",
+          "Time Client",
           "1008",
           "Generic Power OnOff Client"]
         ,
@@ -33,7 +35,7 @@
   },
   "Memory configuration": {
     "MAX_ELEMENTS": "1",
-    "MAX_MODELS": "6",
+    "MAX_MODELS": "7",
     "MAX_APP_BINDS": "4",
     "MAX_SUBSCRIPTIONS": "4",
     "MAX_NETKEYS": "4",

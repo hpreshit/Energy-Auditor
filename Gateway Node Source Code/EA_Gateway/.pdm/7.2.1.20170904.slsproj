@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="com.silabs.module.additional.pdm.com.silabs.ss.framework.project.toolchain.core.default#com.silabs.ss.tool.ide.arm.toolchain.gnu.cdt:7.2.1.20170904" propertyScope="project" contentRoot=".">
+  <file name="gatt.xml" uri="studio:/project/gatt.xml"/>
+  <file name="gatt_db.c" uri="studio:/project/gatt_db.c"/>
+  <file name="gatt_db.h" uri="studio:/project/gatt_db.h"/>
+  <file name="BgBuild_Log.txt" uri="studio:/project/BgBuild_Log.txt"/>
+  <file name="btMesh_configuration.json" uri="studio:/project/btMesh_configuration.json"/>
+  <file name="mesh_app_memory_config.h" uri="studio:/project/mesh_app_memory_config.h"/>
+  <file name="init_app.c" uri="studio:/project/init_app.c"/>
+  <file name="init_mcu.c" uri="studio:/project/init_mcu.c"/>
+  <file name="init_board.c" uri="studio:/project/init_board.c"/>
+  <file name="dcd.c" uri="studio:/project/dcd.c"/>
+  <file name="ble-configuration.h" uri="studio:/project/ble-configuration.h"/>
+  <file name="hal-config-app-common.h" uri="studio:/project/hal-config-app-common.h"/>
+  <file name="create_bl_files.bat" uri="studio:/project/create_bl_files.bat"/>
+  <includePath uri="studio:/project/"/>
+  <macroDefinition name="__HEAP_SIZE" value="0x1200"/>
+  <macroDefinition name="HAL_CONFIG" value="1"/>
+  <macroDefinition name="__STACK_SIZE" value="0x1000"/>
+  <macroDefinition name="MESH_LIB_NATIVE" value=""/>
+  <toolOption partCompatibility=".*" toolId="iar.arm.toolchain.linker.v5.4.0" optionId="iar.arm.toolchain.linker.option.icfFile.v5.4.0" value="${workspace_loc:/${ProjName}/efr32bg13p632f512gm48.icf}"/>
+  <toolOption toolchainCompatibility="gcc" toolId="com.silabs.ide.si32.gcc.cdt.managedbuild.toolchain.exe" optionId="com.silabs.ide.si32.gcc.cdt.managedbuild.tool.gnu.c.linker.script" value="${workspace_loc:/${ProjName}/efr32bg13p632f512gm48.ld}"/>
+</project>

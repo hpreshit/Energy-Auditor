@@ -54,6 +54,12 @@
 #include "bspconfig.h"
 #endif
 
+#include "app_include.h"
+
+#include "letimer.h"
+#include "adc0.h"
+#include "cmu.h"
+
 /***********************************************************************************************//**
  * @addtogroup Application
  * @{
@@ -1916,6 +1922,18 @@ int main()
 
   RETARGET_SerialInit();
 
+  cmu_init_LETIMER0(1);
+  // Initialize LETIMER
+  letimer_init();
+  // Set prescalar
+  letimer_set_prescalar();
+  // COMP0 and COMP1 values
+  letimer_set_compvalue();
+  // Setup ADC
+  ADC0_setup();
+  // Start ADC conversion
+  ADC0_start();
+
   /* initialize LEDs and buttons. Note: some radio boards share the same GPIO for button & LED.
    * Initialization is done in this order so that default configuration will be "button" for those
    * radio boards with shared pins. LEDS_init() is called later as needed to (re)initialize the LEDs
@@ -2027,7 +2045,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
           break;
 
         case TIMER_ID_PRI_LEVEL_TRANSITION:
-          pri_level_transition_complete();
+//          pri_level_transition_complete();
           break;
 
         case TIMER_ID_CTL_TRANSITION:
@@ -2065,6 +2083,8 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
         printf("Light initial state is <%s>\r\n", lightbulb_state.onoff_current ? "ON" : "OFF");
         DI_Print("provisioned", DI_ROW_STATUS);
+        printf("Enabling the LETIMER\r\n");
+        letimer_enable();
       } else {
         printf("node is unprovisioned\r\n");
         DI_Print("unprovisioned", DI_ROW_STATUS);
@@ -2091,6 +2111,9 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       LEDS_SetState(LED_STATE_OFF);
       LEDS_SetTemperature(DEFAULT_TEMPERATURE, DEFAULT_DELTAUV, 0);
       DI_Print("provisioned", DI_ROW_STATUS);
+
+      printf("Enabling the LETIMER\r\n");
+      letimer_enable();
       break;
 
     case gecko_evt_mesh_node_provisioning_failed_id:
@@ -2189,6 +2212,49 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     {
       uint16_t current_level;
       char tmp[21];
+
+      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_SEND_CURRENT_VALUE)) {
+
+   		  printf("ADC Raw Value: %lu\r\n",avg_adcValue);
+
+   		  float voltage = ((float)avg_adcValue*3.3)/4095;
+
+   		  printf("ADC Voltage: %f\r\n",voltage);
+
+   		  uint16_t current = (voltage/330.0)*2000*707;
+
+//   		  printf("ADC Current: %u\r\n",current);
+
+   		  avg_adcValue = 0;
+
+		  printf("Sending Current Value to Gateway:%umA\r\n",current);
+
+		  struct mesh_generic_state currentState, targetState;
+
+		  currentState.kind = mesh_generic_state_level;
+		  currentState.level.level = lightbulb_state.pri_level_current;
+//		  previousCurrentValue = current;
+
+		  targetState.kind = mesh_generic_state_level;
+		  targetState.level.level = current;
+
+		  errorcode_t err = mesh_lib_generic_server_update(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
+		                                        0,
+		                                        &currentState,
+		                                        &targetState,
+		                                        0);
+		  if(err){
+			  printf("Server Update Current value state Failed:%d\r\n",err);
+		  }
+		  else{
+			  err = mesh_lib_generic_server_publish(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,0, mesh_generic_state_level);
+			  if(err){
+				  printf("Server Publish Current value state Failed:%d\r\n",err);
+			  }
+		  }
+
+      }
+
 
       if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_LED_LEVEL_CHANGED)) {
         /* this signal from the LED PWM driver indicates that the level has changed,

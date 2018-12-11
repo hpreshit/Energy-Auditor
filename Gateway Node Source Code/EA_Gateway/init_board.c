@@ -22,7 +22,6 @@
 #include "em_cmu.h"
 
 #include "em_usart.h"
-//#include "mx25flash_spi.h"
 
 #include "bsp.h"
 

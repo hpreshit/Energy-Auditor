@@ -165,6 +165,7 @@ static uint32 pb1_press;
  *  These are needed to support radio boards with active-low and
  *  active-high LED configuration
  */
+#define FEATURE_LED_BUTTON_ON_SAME_PIN
 #ifdef FEATURE_LED_BUTTON_ON_SAME_PIN
 /* LED GPIO is active-low */
 #define TURN_LED_OFF   GPIO_PinOutSet
@@ -362,9 +363,12 @@ void send_ctl_request(int retrans)
   struct mesh_generic_request req;
 
   req.kind = mesh_lighting_request_ctl;
+  lightness_level = 12345;
+  temperature_level = 6789;
   req.ctl.lightness = lightness_level;
   req.ctl.temperature = temperature_level;
-  req.ctl.deltauv = DELTA_UV; //hardcoded delta uv
+//  req.ctl.deltauv = DELTA_UV; //hardcoded delta uv
+  req.ctl.deltauv = 1; //Gateway ID
 
   // increment transaction ID for each request, unless it's a retransmission
   if (retrans == 0) {
@@ -662,7 +666,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
   if (NULL == evt) {
     return;
   }
-
+  printf("EVENT->%u\r\n",evt_id);
   switch (evt_id) {
     case gecko_evt_system_boot_id:
       // check pushbutton state at startup. If either PB0 or PB1 is held down then do factory reset
@@ -813,6 +817,23 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     case gecko_evt_mesh_node_model_config_changed_id:
       printf("model config changed\r\n");
       break;
+
+    case gecko_evt_mesh_generic_client_server_status_id:
+    	printf("Server: 0x%x Status ID\r\n",evt->data.evt_mesh_generic_client_server_status.server_address);
+    	break;
+
+    case gecko_evt_mesh_generic_server_state_changed_id:
+    	printf("Server state changed id\r\n");
+    	printf("Server Addr: 0x%x. Len:%u\r\n",
+    			evt->data.evt_mesh_generic_client_server_status.server_address,
+				evt->data.evt_mesh_generic_client_server_status.parameters.len);
+    	for(int i = 0; i < evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
+
+    		printf("%x ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
+    	}
+    	printf("-------------\r\n");
+
+    	break;
 
     case gecko_evt_le_connection_opened_id:
       printf("evt:gecko_evt_le_connection_opened_id\r\n");
