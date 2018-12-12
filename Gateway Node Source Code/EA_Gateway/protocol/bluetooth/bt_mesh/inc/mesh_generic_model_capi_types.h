@@ -57,6 +57,9 @@ typedef enum {
 #define MESH_GENERIC_CLIENT_PROPERTY_SERVER_MODEL_ID 0x1014
 #define MESH_GENERIC_PROPERTY_CLIENT_MODEL_ID 0x1015
 
+#define MESH_TIME_SERVER_MODEL_ID	0x1200
+#define MESH_TIME_CLIENT_MODEL_ID	0x1202
+
 /*
  * Generic model states
  *
@@ -286,6 +289,11 @@ struct mesh_lighting_ctl_temperature_range_state {
   uint16_t max;
 };
 
+//gunj
+struct mesh_time_server_state{
+	uint32_t epochTime;
+};
+
 /** Generic state type */
 typedef enum {
   mesh_generic_state_on_off = 0x00,
@@ -306,6 +314,7 @@ typedef enum {
   mesh_generic_state_property_list_admin = 0x0f,
   mesh_generic_state_property_list_manuf = 0x10,
   mesh_generic_state_property_list_client = 0x11,
+  mesh_time_state = 0x12,
 
   mesh_lighting_state_lightness_actual = 0x80,
   mesh_lighting_state_lightness_linear = 0x81,
@@ -351,6 +360,8 @@ struct mesh_generic_state {
     /** Light CTL state used for updating
      #mesh_lighting_state_ctl_temperature_range */
     struct mesh_lighting_ctl_temperature_range_state ctl_temperature_range;
+    //gunj
+    struct mesh_time_server_state;
   };
 };
 
@@ -373,6 +384,7 @@ typedef enum {
   mesh_generic_request_property_user = 0x0c,
   mesh_generic_request_property_admin = 0x0d,
   mesh_generic_request_property_manuf = 0x0e,
+  mesh_time_change_request = 0x0f,	//gunj
 
   mesh_lighting_request_lightness_actual = 0x80,
   mesh_lighting_request_lightness_linear = 0x81,
@@ -493,6 +505,10 @@ struct mesh_generic_request {
       /** Maximum temperature */
       uint16_t max;
     } ctl_temperature_range;
+    /*gunj*/
+    struct {
+    	uint32_t epochTime;
+    }time;
   };
 };
 

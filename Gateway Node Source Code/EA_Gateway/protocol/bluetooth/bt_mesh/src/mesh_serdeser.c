@@ -946,16 +946,16 @@ int mesh_lib_deserialize_state(struct mesh_generic_state *current,
         *has_target = 0;
       } else if (msg_len - msg_off == 12) {
         current->kind = kind;
-        current->ctl.lightness = int16_from_buf(&msg_buf[msg_off]);
+        current->ctl.lightness = uint16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;
         current->ctl.temperature = uint16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;
         current->ctl.deltauv = int16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;
         target->kind = kind;
-        target->ctl.lightness = int16_from_buf(&msg_buf[msg_off]);
+        target->ctl.lightness = uint16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;
-        target->ctl.temperature = int16_from_buf(&msg_buf[msg_off]);
+        target->ctl.temperature = uint16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;
         target->ctl.deltauv = int16_from_buf(&msg_buf[msg_off]);
         msg_off += 2;

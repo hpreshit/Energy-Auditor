@@ -53,6 +53,8 @@
 #include "bspconfig.h"
 #endif
 
+#include "mesh_serdeser.h"
+
 /***********************************************************************************************//**
  * @addtogroup Application
  * @{
@@ -265,6 +267,7 @@ void enable_button_interrupts(void)
   GPIOINT_CallbackRegister(BSP_BUTTON1_PIN, gpioint);
 }
 
+
 /**
  * This function publishes one on/off request to change the state of light(s) in the group.
  * Global variable switch_pos holds the latest desired light state, possible values are
@@ -360,15 +363,20 @@ void send_ctl_request(int retrans)
 {
   uint16 resp;
   uint16 delay;
-  struct mesh_generic_request req;
+  struct mesh_generic_request req, req2;
 
   req.kind = mesh_lighting_request_ctl;
-  lightness_level = 12345;
-  temperature_level = 6789;
-  req.ctl.lightness = lightness_level;
-  req.ctl.temperature = temperature_level;
+  uint32_t epochTime = RTCC_CounterGet();
+  printf("Sending EpochTime:%lu\r\n",epochTime);
+//  temperature_level = 800;	//800 - LS 2 bytes of epoch time //801 - MS 2 bytes of epoch time
+  req.ctl.lightness = (epochTime & 0xFFFF0000) >> 16;
+  req.ctl.temperature = 800;
 //  req.ctl.deltauv = DELTA_UV; //hardcoded delta uv
   req.ctl.deltauv = 1; //Gateway ID
+
+  req2 = req;
+  req.ctl.lightness = (epochTime & 0xFFFF);
+  req2.ctl.temperature = 801;
 
   // increment transaction ID for each request, unless it's a retransmission
   if (retrans == 0) {
@@ -380,8 +388,8 @@ void send_ctl_request(int retrans)
   resp = gecko_cmd_mesh_generic_client_publish(
     MESH_LIGHTING_CTL_CLIENT_MODEL_ID,
     _elem_index,
-    trid,
-    0,     // transition
+    trid++,
+	0,     // transition
     delay,
     0,     // flags
     mesh_lighting_request_ctl, // type
@@ -390,10 +398,29 @@ void send_ctl_request(int retrans)
     )->result;
 
   if (resp) {
-    printf("gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
+    printf("1.gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
   } else {
-    printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
+    printf("1.request sent, trid = %u, delay = %d\r\n", trid, delay);
   }
+
+  //2nd part
+  resp = gecko_cmd_mesh_generic_client_publish(
+      MESH_LIGHTING_CTL_CLIENT_MODEL_ID,
+      _elem_index,
+      trid,
+	  0,     // transition
+      delay,
+      0,     // flags
+      mesh_lighting_request_ctl, // type
+      6,     // param len
+      (uint8*)&req2.ctl   /// parameters data
+      )->result;
+
+    if (resp) {
+      printf("2.gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
+    } else {
+      printf("2.request sent, trid = %u, delay = %d\r\n", trid, delay);
+    }
 }
 
 /**
@@ -609,7 +636,7 @@ int main()
   gecko_bgapi_class_flash_init();
   gecko_bgapi_class_test_init();
   //gecko_bgapi_class_sm_init();
-  //mesh_native_bgapi_init();
+//  mesh_native_bgapi_init();
   gecko_bgapi_class_mesh_node_init();
   //gecko_bgapi_class_mesh_prov_init();
   gecko_bgapi_class_mesh_proxy_init();
@@ -627,6 +654,8 @@ int main()
   gecko_initCoexHAL();
 
   RETARGET_SerialInit();
+  printf("\033[2J\033[H");
+  printf("*****GATEWAY NODE 1******\r\n");
 
   /* initialize LEDs and buttons. Note: some radio boards share the same GPIO for button & LED.
    * Initialization is done in this order so that default configuration will be "button" for those
@@ -666,7 +695,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
   if (NULL == evt) {
     return;
   }
-  printf("EVENT->%u\r\n",evt_id);
+
   switch (evt_id) {
     case gecko_evt_system_boot_id:
       // check pushbutton state at startup. If either PB0 or PB1 is held down then do factory reset
@@ -819,7 +848,26 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       break;
 
     case gecko_evt_mesh_generic_client_server_status_id:
+    	printf("--------\r\n");
     	printf("Server: 0x%x Status ID\r\n",evt->data.evt_mesh_generic_client_server_status.server_address);
+
+    	struct mesh_generic_state current, target;
+    	int hasTarget = 0;
+    	mesh_lib_deserialize_state(&current,&target,&hasTarget, mesh_lighting_state_ctl,
+    			evt->data.evt_mesh_generic_client_server_status.parameters.data,
+				evt->data.evt_mesh_generic_client_server_status.parameters.len);
+
+    	printf("Current Value: %umA\r\n",current.ctl.lightness);
+    	if(hasTarget){
+			printf("Time Offset: %u\r\n",target.ctl.lightness);
+			printf("Abs Time: %lu\r\n",RTCC_CounterGet()+target.ctl.lightness);
+    	}
+    	printf("Raw Data:");
+    	for(int i = 0; i<evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
+    		printf(" %d ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
+    	}
+    	printf("\r\n");
+
     	break;
 
     case gecko_evt_mesh_generic_server_state_changed_id:
@@ -895,7 +943,10 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_lpn_friendship_established_id:
       printf("friendship established\r\n");
-      DI_Print("LPN", DI_ROW_LPN);
+      DI_Print("LPN - FOUND FRIEND", DI_ROW_LPN);
+      send_ctl_request(0);
+//      send_timeupdate_request(0);
+      printf("--TIME SENT--\r\n");
       break;
 
     case gecko_evt_mesh_lpn_friendship_failed_id:

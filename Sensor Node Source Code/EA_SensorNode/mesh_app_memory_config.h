@@ -10,7 +10,7 @@
 
 
 #define MESH_CFG_MAX_ELEMENTS                   2
-#define MESH_CFG_MAX_MODELS                     14
+#define MESH_CFG_MAX_MODELS                     12
 #define MESH_CFG_MAX_APP_BINDS                  4
 #define MESH_CFG_MAX_SUBSCRIPTIONS              4
 #define MESH_CFG_MAX_NETKEYS                    4

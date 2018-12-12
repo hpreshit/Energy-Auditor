@@ -59,6 +59,7 @@
 #include "letimer.h"
 #include "adc0.h"
 #include "cmu.h"
+#include "em_rtcc.h"
 
 /***********************************************************************************************//**
  * @addtogroup Application
@@ -615,6 +616,41 @@ static errorcode_t ctl_response(uint16_t element_index,
                                           0x00);
 }
 
+static errorcode_t ctl_updateWithReadings(uint16_t element_index, uint16_t currentReading, uint32_t epochTime)
+{
+  struct mesh_generic_state current, target;
+
+  current.kind = mesh_lighting_state_ctl;
+  current.ctl.lightness = currentReading;
+  current.ctl.temperature = currentReading;
+  current.ctl.deltauv = 32;
+
+  target.kind = mesh_lighting_state_ctl;
+  target.ctl.lightness = epochTime;
+  target.ctl.temperature = epochTime;
+  target.ctl.deltauv = 32;
+
+  return mesh_lib_generic_server_update(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
+                                        element_index,
+                                        &current,
+                                        &target,
+                                        0);
+}
+//gunj
+static errorcode_t ctl_update_and_publishReadings(uint16_t element_index, uint16_t currentReading, uint32_t epochTime)
+{
+  errorcode_t e;
+
+  e = ctl_updateWithReadings(element_index, currentReading, epochTime);
+  if (e == bg_err_success) {
+    e = mesh_lib_generic_server_publish(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
+                                        element_index,
+                                        mesh_lighting_state_ctl);
+  }
+
+  return e;
+}
+
 static errorcode_t ctl_update(uint16_t element_index)
 {
   struct mesh_generic_state current, target;
@@ -650,6 +686,8 @@ static errorcode_t ctl_update_and_publish(uint16_t element_index)
   return e;
 }
 
+static uint32_t g_epochTime = 0;
+
 static void ctl_request(uint16_t model_id,
                         uint16_t element_index,
                         uint16_t client_addr,
@@ -660,8 +698,23 @@ static void ctl_request(uint16_t model_id,
                         uint16_t delay_ms,
                         uint8_t request_flags)
 {
-  printf("ctl_request: lightness=%u, temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
+  printf("***ctl_request: lightness=%u, temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
          request->ctl.lightness, request->ctl.temperature, request->ctl.deltauv, transition_ms, delay_ms);
+  static uint32_t l_epochTime = 0;
+  if((l_epochTime == 0) && (request->ctl.temperature == 800)){
+	  l_epochTime = ((uint32_t)request->ctl.lightness);
+	  printf("****Gateway ID: %d, Epoch Time 1st part\r\n",request->ctl.deltauv);
+  }
+  else if(l_epochTime && (request->ctl.temperature == 801)){
+	  l_epochTime |= (((uint32_t)request->ctl.lightness)<<16);
+	  g_epochTime = l_epochTime;
+	  RTCC_CounterSet(g_epochTime);
+	  l_epochTime = 0;
+	  printf("****Gateway ID: %d, Epoch Time:%lu\r\n", request->ctl.deltauv, g_epochTime);
+	  printf("**Received Time Enabling the LETIMER\r\n");
+	  letimer_enable();
+  }
+  return;
 
   if ((lightbulb_state.lightness_current == request->ctl.lightness)
       && (lightbulb_state.temperature_current == request->ctl.temperature)
@@ -732,6 +785,7 @@ static void ctl_change(uint16_t model_id,
                        const struct mesh_generic_state *target,
                        uint32_t remaining_ms)
 {
+
   if (current->kind != mesh_lighting_state_ctl) {
     // if kind is not 'ctl' then just report the change here
     printf("ctl change, kind %u\r\n", current->kind);
@@ -822,6 +876,8 @@ static errorcode_t ctl_setup_update(uint16_t element_index, mesh_generic_state_t
                                         NULL,
                                         0);
 }
+
+
 
 static void ctl_setup_request(uint16_t model_id,
                               uint16_t element_index,
@@ -1469,6 +1525,12 @@ static void init_models(void)
                                            0,
                                            ctl_setup_request,
                                            ctl_setup_change);
+
+//  mesh_lib_generic_server_register_handler(MESH_TIME_SERVER_MODEL_ID,
+//                                             0,
+//                                             time_change_request,
+//                                             time_change);
+
   mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
                                            1,
                                            ctl_temperature_request,
@@ -1921,6 +1983,8 @@ int main()
   gecko_initCoexHAL();
 
   RETARGET_SerialInit();
+  printf("\033[2J\033[H");
+  printf("******SENSOR NODE*****\r\n");
 
   cmu_init_LETIMER0(1);
   // Initialize LETIMER
@@ -1942,6 +2006,8 @@ int main()
   button_init();
 
   DI_Init();
+
+  CMU_ClockEnable(cmuClock_RTCC, true);
 
   while (1) {
     struct gecko_cmd_packet *evt = gecko_wait_event();
@@ -2084,7 +2150,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         printf("Light initial state is <%s>\r\n", lightbulb_state.onoff_current ? "ON" : "OFF");
         DI_Print("provisioned", DI_ROW_STATUS);
         printf("Enabling the LETIMER\r\n");
-        letimer_enable();
       } else {
         printf("node is unprovisioned\r\n");
         DI_Print("unprovisioned", DI_ROW_STATUS);
@@ -2111,9 +2176,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       LEDS_SetState(LED_STATE_OFF);
       LEDS_SetTemperature(DEFAULT_TEMPERATURE, DEFAULT_DELTAUV, 0);
       DI_Print("provisioned", DI_ROW_STATUS);
-
-      printf("Enabling the LETIMER\r\n");
-      letimer_enable();
       break;
 
     case gecko_evt_mesh_node_provisioning_failed_id:
@@ -2155,12 +2217,16 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_friend_friendship_established_id:
       printf("evt gecko_evt_mesh_friend_friendship_established, lpn_address=%x\r\n", evt->data.evt_mesh_friend_friendship_established.lpn_address);
-      DI_Print("FRIEND", DI_ROW_FRIEND);
+      DI_Print("FRIENDSHIP DONE", DI_ROW_FRIEND);
+//      printf("Enabling the LETIMER\r\n");
+//      letimer_enable();
       break;
 
     case gecko_evt_mesh_friend_friendship_terminated_id:
       printf("evt gecko_evt_mesh_friend_friendship_terminated, reason=%x\r\n", evt->data.evt_mesh_friend_friendship_terminated.reason);
       DI_Print("NO LPN", DI_ROW_FRIEND);
+      printf("Disabling the LETIMER\r\n");
+//      letimer_disable();
       break;
 
     case gecko_evt_le_gap_adv_timeout_id:
@@ -2229,30 +2295,21 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
 		  printf("Sending Current Value to Gateway:%umA\r\n",current);
 
-		  struct mesh_generic_state currentState, targetState;
+//		  lightbulb_state.lightness_current = current;
+//		  lightbulb_state.temperature_current = current*1000;
+//		  lightbulb_state.deltauv_current = 1234;
+//
+//		  lightbulb_state.lightness_target = current;
+//		  lightbulb_state.temperature_target = current*1000;
+//		  lightbulb_state.deltauv_target = 1235;
 
-		  currentState.kind = mesh_generic_state_level;
-		  currentState.level.level = lightbulb_state.pri_level_current;
-//		  previousCurrentValue = current;
-
-		  targetState.kind = mesh_generic_state_level;
-		  targetState.level.level = current;
-
-		  errorcode_t err = mesh_lib_generic_server_update(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
-		                                        0,
-		                                        &currentState,
-		                                        &targetState,
-		                                        0);
+		  uint32_t epochTime = RTCC_CounterGet();
+		  printf("--EpochTime--> %lu\r\n",epochTime);
+		  errorcode_t err = ctl_update_and_publishReadings(0,current,epochTime);
+		  epochTime += 10;
 		  if(err){
-			  printf("Server Update Current value state Failed:%d\r\n",err);
+			  printf("Publish Update Failed\r\n");
 		  }
-		  else{
-			  err = mesh_lib_generic_server_publish(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,0, mesh_generic_state_level);
-			  if(err){
-				  printf("Server Publish Current value state Failed:%d\r\n",err);
-			  }
-		  }
-
       }
 
 

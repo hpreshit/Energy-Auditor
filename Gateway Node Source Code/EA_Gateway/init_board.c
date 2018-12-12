@@ -44,6 +44,6 @@ void initBoard(void)
   // Put the SPI flash into Deep Power Down mode for those radio boards where it is available
 //  MX25_init();
 //  MX25_DP();
-  // We must disable SPI communication
+//  // We must disable SPI communication
 //  USART_Reset(MX25_USART);
 }
