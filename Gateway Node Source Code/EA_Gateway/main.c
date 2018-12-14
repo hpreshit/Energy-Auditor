@@ -150,7 +150,7 @@ static uint32 pb1_press;
 
 #define LONG_PRESS_TIME_TICKS   (32768 / 4)
 
-#define VERY_LONG_PRESS_TIME_TICKS  (32768)
+#define VERY_LONG_PRESS_TIME_TICKS  (1)
 
 //gunj
 bd_addr myBTAddr = {0};
@@ -230,14 +230,17 @@ void gpioint(uint8_t pin)
     if (GPIO_PinInGet(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN) == 0) {
       // PB0 pressed - record RTCC timestamp
       pb0_press = RTCC_CounterGet();
+      printf("Time press:%lu\r\n",pb0_press);
     } else {
       // PB0 released - check if it was short or long press
       t_diff = RTCC_CounterGet() - pb0_press;
-      if (t_diff < LONG_PRESS_TIME_TICKS) {
-        gecko_external_signal(EXT_SIGNAL_PB0_SHORT_PRESS);
-      } else if (t_diff < VERY_LONG_PRESS_TIME_TICKS) {
-        gecko_external_signal(EXT_SIGNAL_PB0_LONG_PRESS);
-      } else {
+      printf("Time press diff:%lu (%d)\r\n", t_diff, VERY_LONG_PRESS_TIME_TICKS);
+//      if (t_diff < LONG_PRESS_TIME_TICKS) {
+//        gecko_external_signal(EXT_SIGNAL_PB0_SHORT_PRESS);
+//      } else if (t_diff < VERY_LONG_PRESS_TIME_TICKS) {
+//        gecko_external_signal(EXT_SIGNAL_PB0_LONG_PRESS);
+//      } else {
+      if(t_diff >= VERY_LONG_PRESS_TIME_TICKS){
         gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
       }
     }
@@ -850,6 +853,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         switch_node_init();
 
         DI_Print("provisioned", DI_ROW_STATUS);
+        publish_SamplingRequest(0, false);
       } else {
         printf("node is unprovisioned\r\n");
         DI_Print("unprovisioned", DI_ROW_STATUS);
@@ -905,6 +909,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_PROVISIONING, 0);
       LED_set_state(LED_STATE_OFF);
       DI_Print("provisioned", DI_ROW_STATUS);
+      publish_SamplingRequest(0, false);
 
 #ifdef FEATURE_LED_BUTTON_ON_SAME_PIN
       button_init(); /* shared GPIO pins used as button input */
@@ -932,12 +937,10 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     case gecko_evt_mesh_generic_client_server_status_id:
     {
     	uint16_t server_addr = evt->data.evt_mesh_generic_client_server_status.server_address;
-    	printf("--------\r\n");
-    	printf("Server: 0x%x Status ID\r\n",server_addr);
     	//for lighting ctl model
     	if(evt->data.evt_mesh_generic_client_server_status.model_id == MESH_LIGHTING_CTL_CLIENT_MODEL_ID){
 
-    		printf("RESPONSE FROM SERVER for CTL model\r\n");
+    		printf("RESPONSE FROM SERVER 0x%x for CTL model\r\n",server_addr);
     		struct mesh_generic_state current, target;
     		int hasTarget = 0;
     		mesh_lib_deserialize_state(&current,&target,&hasTarget, mesh_lighting_state_ctl,
@@ -969,6 +972,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     			printf("Node count: %lu\r\n",sensorNodeRegisteredCount);
     			//stop the timer, start the timer with 200ms
     			gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
+    			//TODO: add the macro for timer tick ms
     			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(500), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
     			if (result) {
     				printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
@@ -1012,6 +1016,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     				if(nodeResponseCount == sensorNodeRegisteredCount){
     					nodeResponseCount = 0;
     					printf("Got sampled current data from all node. Push to gateway\r\n");
+    					printf("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\r\n");
     					//TODO:Set an event or directly call the function to send the data to Cloud
     				}
     			}
@@ -1033,7 +1038,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     		printf("%x ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
     	}
-    	printf("-------------\r\n");
 
     	break;
 

@@ -198,7 +198,7 @@ void LEDS_init(void)
   GPIO_PinModeSet(BSP_LED0_PORT, BSP_LED0_PIN, gpioModePushPull, LED_OFF_STATE);
   GPIO_PinModeSet(BSP_LED1_PORT, BSP_LED1_PIN, gpioModePushPull, LED_OFF_STATE);
 
-  timer_init();
+//  timer_init();
 }
 
 void LEDS_SetLevel(uint16_t level, uint16_t delay_ms)

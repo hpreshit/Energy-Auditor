@@ -51,7 +51,7 @@ void initMcu(void)
   rtccInit.precntWrapOnCCV0      = false;
   rtccInit.cntWrapOnCCV1         = false;
   rtccInit.prescMode             = rtccCntTickPresc;
-  rtccInit.presc                 = rtccCntPresc_1;
+  rtccInit.presc                 = rtccCntPresc_32768;
   rtccInit.enaOSCFailDetect      = false;
   rtccInit.cntMode               = rtccCntModeNormal;
   RTCC_Init(&rtccInit);

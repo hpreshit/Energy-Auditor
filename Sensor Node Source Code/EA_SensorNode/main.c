@@ -265,7 +265,7 @@ static void onoff_request(uint16_t model_id,
                           uint16_t delay_ms,
                           uint8_t request_flags)
 {
-  printf("ON/OFF request: requested state=<%s>, transition=%lu, delay=%u\r\n",
+  printf("LETIMER ON/OFF request: requested state=<%s>, transition=%lu, delay=%u\r\n",
          request->on_off ? "ON" : "OFF", transition_ms, delay_ms);
 
   if(request->on_off == true){
@@ -278,48 +278,48 @@ static void onoff_request(uint16_t model_id,
   }
   return;
 
-  if (lightbulb_state.onoff_current == request->on_off) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Turning lightbulb <%s>\r\n", request->on_off ? "ON" : "OFF");
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.onoff_current = request->on_off;
-      lightbulb_state.onoff_target = request->on_off;
-      if (lightbulb_state.onoff_current == MESH_GENERIC_ON_OFF_STATE_OFF) {
-        LEDS_SetState(LED_STATE_OFF);
-      } else {
-        LEDS_SetState(LED_STATE_ON);
-      }
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the light change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.onoff_target = request->on_off;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_ONOFF, 1);
-      // store transition parameter for later use
-      delayed_onoff_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.onoff_target = request->on_off;
-
-      if (request->on_off == MESH_GENERIC_ON_OFF_STATE_OFF) {
-        LEDS_SetLevel(0, transition_ms);
-      } else {
-        // restore last brightness
-        lightbulb_state.lightness_target = lightbulb_state.lightness_last;
-        LEDS_SetLevel(lightbulb_state.lightness_target, transition_ms);
-      }
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_ONOFF_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    onoff_response(element_index, client_addr, appkey_index);
-  } else {
-    onoff_update(element_index);
-  }
+//  if (lightbulb_state.onoff_current == request->on_off) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Turning lightbulb <%s>\r\n", request->on_off ? "ON" : "OFF");
+//    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
+//      lightbulb_state.onoff_current = request->on_off;
+//      lightbulb_state.onoff_target = request->on_off;
+//      if (lightbulb_state.onoff_current == MESH_GENERIC_ON_OFF_STATE_OFF) {
+//        LEDS_SetState(LED_STATE_OFF);
+//      } else {
+//        LEDS_SetState(LED_STATE_ON);
+//      }
+//    } else if (delay_ms > 0) {
+//      // a delay has been specified for the light change. Start a soft timer
+//      // that will trigger the change after the given delay
+//      // Current state remains as is for now
+//      lightbulb_state.onoff_target = request->on_off;
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_ONOFF, 1);
+//      // store transition parameter for later use
+//      delayed_onoff_trans = transition_ms;
+//    } else {
+//      // no delay but transition time has been set.
+//      lightbulb_state.onoff_target = request->on_off;
+//
+//      if (request->on_off == MESH_GENERIC_ON_OFF_STATE_OFF) {
+//        LEDS_SetLevel(0, transition_ms);
+//      } else {
+//        // restore last brightness
+//        lightbulb_state.lightness_target = lightbulb_state.lightness_last;
+//        LEDS_SetLevel(lightbulb_state.lightness_target, transition_ms);
+//      }
+//      // lightbulb current state will be updated when transition is complete
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_ONOFF_TRANSITION, 1);
+//    }
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    onoff_response(element_index, client_addr, appkey_index);
+//  } else {
+//    onoff_update(element_index);
+//  }
 }
 
 static void onoff_change(uint16_t model_id,
@@ -328,6 +328,7 @@ static void onoff_change(uint16_t model_id,
                          const struct mesh_generic_state *target,
                          uint32_t remaining_ms)
 {
+	return;
   if (current->on_off.on != lightbulb_state.onoff_current) {
     printf("on-off state changed %u to %u\r\n", lightbulb_state.onoff_current, current->on_off.on);
 
@@ -401,6 +402,7 @@ static void lightness_request(uint16_t model_id,
                               uint16_t delay_ms,
                               uint8_t request_flags)
 {
+	return;
   // for simplicity, this demo assumes that all lightness requests use the actual scale.
   // other type of requests are ignored
   if (request->kind != mesh_lighting_request_lightness_actual) {
@@ -455,6 +457,7 @@ static void lightness_change(uint16_t model_id,
                              const struct mesh_generic_state *target,
                              uint32_t remaining_ms)
 {
+	return;
   if (current->kind != mesh_lighting_state_lightness_actual) {
     // if kind is not 'actual' then just report the change here, no change to light state
     printf("lightness change, kind %u, value %u\r\n", current->kind, current->lightness.level);
@@ -533,6 +536,7 @@ static void pri_level_request(uint16_t model_id,
                               uint16_t delay_ms,
                               uint8_t request_flags)
 {
+	return;
   // for simplicity, this demo assumes that all level requests use set level.
   // other type of requests are ignored
 
@@ -594,6 +598,7 @@ static void pri_level_change(uint16_t model_id,
                              const struct mesh_generic_state *target,
                              uint32_t remaining_ms)
 {
+	return;
   if (lightbulb_state.pri_level_current != current->level.level) {
     printf("pri_level_change: from %d to %d\r\n", lightbulb_state.pri_level_current, current->level.level);
     lightbulb_state.pri_level_current = current->level.level;
@@ -611,12 +616,12 @@ static errorcode_t ctl_response(uint16_t element_index,
 
   current.kind = mesh_lighting_state_ctl;
   current.ctl.lightness = myBTAddr.addr[0] | (myBTAddr.addr[1] << 8); //put btaddr
-  current.ctl.temperature = 20;
+  current.ctl.temperature = 1000;
   current.ctl.deltauv = 1;
 
   target.kind = mesh_lighting_state_ctl;
   target.ctl.lightness = myBTAddr.addr[2] | (myBTAddr.addr[3] << 8); //put btaddr
-  target.ctl.temperature = 65535;
+  target.ctl.temperature = 1000;
   target.ctl.deltauv = 2;
 
   return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
@@ -635,12 +640,12 @@ static errorcode_t ctl_updateWithReadings(uint16_t element_index, uint16_t curre
 
   current.kind = mesh_lighting_state_ctl;
   current.ctl.lightness = currentReading;
-  current.ctl.temperature = currentReading;
+  current.ctl.temperature = 1000;
   current.ctl.deltauv = 32;
 
   target.kind = mesh_lighting_state_ctl;
   target.ctl.lightness = epochTime;
-  target.ctl.temperature = epochTime;
+  target.ctl.temperature = 1000;
   target.ctl.deltauv = 32;
 
   return mesh_lib_generic_server_update(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
@@ -699,7 +704,7 @@ static errorcode_t ctl_update_and_publish(uint16_t element_index)
   return e;
 }
 
-static uint32_t g_epochTime = 0;
+static volatile uint32_t g_epochTime = 0;
 
 static void ctl_request(uint16_t model_id,
                         uint16_t element_index,
@@ -711,21 +716,19 @@ static void ctl_request(uint16_t model_id,
                         uint16_t delay_ms,
                         uint8_t request_flags)
 {
-  printf("***ctl_request: lightness=%u, temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
-         request->ctl.lightness, request->ctl.temperature, request->ctl.deltauv, transition_ms, delay_ms);
-  static uint32_t l_epochTime = 0;
+//  printf("***ctl_request: lightness=%u, temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
+//         request->ctl.lightness, request->ctl.temperature, request->ctl.deltauv, transition_ms, delay_ms);
+  static volatile uint32_t l_epochTime = 0;
   if((l_epochTime == 0) && (request->ctl.temperature == 800)){
 	  l_epochTime = ((uint32_t)request->ctl.lightness);
-	  printf("****Gateway ID: %d, Epoch Time 1st part\r\n",request->ctl.deltauv);
+	  printf("From Gateway ID: %d, Epoch Time\r\n",request->ctl.deltauv);
   }
   else if(l_epochTime && (request->ctl.temperature == 801)){
 	  l_epochTime |= (((uint32_t)request->ctl.lightness)<<16);
 	  g_epochTime = l_epochTime;
 	  RTCC_CounterSet(g_epochTime);
 	  l_epochTime = 0;
-	  printf("****Gateway ID: %d, Epoch Time:%lu\r\n", request->ctl.deltauv, g_epochTime);
-//	  printf("**Received Time Enabling the LETIMER\r\n");
-//	  letimer_enable();
+	  printf("From Gateway ID: %d --> Set Epoch Time:%lu\r\n", request->ctl.deltauv, g_epochTime);
   }
 
 
@@ -748,6 +751,7 @@ static void ctl_change(uint16_t model_id,
                        uint32_t remaining_ms)
 {
 
+	return;
   if (current->kind != mesh_lighting_state_ctl) {
     // if kind is not 'ctl' then just report the change here
     printf("ctl change, kind %u\r\n", current->kind);
@@ -851,6 +855,7 @@ static void ctl_setup_request(uint16_t model_id,
                               uint16_t delay_ms,
                               uint8_t request_flags)
 {
+	return;
   switch (request->kind) {
     case mesh_lighting_request_ctl_default:
       printf("ctl_setup_request: state=ctl_default, default_lightness=%u, default_temperature=%u, default_delta_uv=%d",
@@ -914,6 +919,7 @@ static void ctl_setup_change(uint16_t model_id,
                              const struct mesh_generic_state *target,
                              uint32_t remaining_ms)
 {
+	return;
   switch (current->kind) {
     case mesh_lighting_state_ctl_default:
       if (lightbulb_state.lightness_default != current->ctl.lightness) {
@@ -1033,6 +1039,7 @@ static void ctl_temperature_request(uint16_t model_id,
                                     uint16_t delay_ms,
                                     uint8_t request_flags)
 {
+	return;
   printf("ctl_temperature_request: temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
          request->ctl_temperature.temperature, request->ctl_temperature.deltauv, transition_ms, delay_ms);
 
@@ -1089,6 +1096,7 @@ static void ctl_temperature_change(uint16_t model_id,
                                    const struct mesh_generic_state *target,
                                    uint32_t remaining_ms)
 {
+	return;
   if (lightbulb_state.temperature_current != current->ctl.temperature) {
     printf("temperature_change: from %u to %u\r\n", lightbulb_state.temperature_current, current->ctl.temperature);
     lightbulb_state.temperature_current = current->ctl.temperature;
@@ -1297,6 +1305,7 @@ static void power_onoff_request(uint16_t model_id,
                                 uint16_t delay_ms,
                                 uint8_t request_flags)
 {
+	return;
   printf("ON POWER UP request received; state=<%s>\n",
          lightbulb_state.onpowerup == 0 ? "OFF"
          : lightbulb_state.onpowerup == 1 ? "ON"
@@ -1370,6 +1379,7 @@ static void transtime_request(uint16_t model_id,
                               uint16_t delay_ms,
                               uint8_t request_flags)
 {
+	return;
   printf("TRANSTIME request received; state=<0x%x>\n",
          lightbulb_state.transtime);
 
@@ -1488,10 +1498,6 @@ static void init_models(void)
                                            ctl_setup_request,
                                            ctl_setup_change);
 
-//  mesh_lib_generic_server_register_handler(MESH_TIME_SERVER_MODEL_ID,
-//                                             0,
-//                                             time_change_request,
-//                                             time_change);
 
   mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
                                            1,
@@ -1511,7 +1517,7 @@ static void init_models(void)
  */
 void lightbulb_state_init(void)
 {
-  uint16 res;
+//  uint16 res;
 
   /* Initialize mesh lib */
   mesh_lib_init(malloc, free, 8);
@@ -1523,75 +1529,75 @@ void lightbulb_state_init(void)
 //    printf("Friend init failed 0x%x\r\n", res);
 //  }
 
-  memset(&lightbulb_state, 0, sizeof(struct lightbulb_state));
-  if (lightbulb_state_load() != 0) {
-    printf("lightbulb_state_load() failed, using defaults\r\n");
-    goto publish;
-  }
+//  memset(&lightbulb_state, 0, sizeof(struct lightbulb_state));
+//  if (lightbulb_state_load() != 0) {
+//    printf("lightbulb_state_load() failed, using defaults\r\n");
+//    goto publish;
+//  }
+//
+//  // Handle on power up behavior
+//  switch (lightbulb_state.onpowerup) {
+//    case MESH_GENERIC_ON_POWER_UP_STATE_OFF:
+//      printf("On power up state is OFF\r\n");
+//      lightbulb_state.onoff_current = MESH_GENERIC_ON_OFF_STATE_OFF;
+//      lightbulb_state.onoff_target = MESH_GENERIC_ON_OFF_STATE_OFF;
+//      LEDS_SetState(LED_STATE_OFF);
+//      LEDS_SetTemperature(lightbulb_state.temperature_default, lightbulb_state.deltauv_default, 0);
+//      break;
+//    case MESH_GENERIC_ON_POWER_UP_STATE_ON:
+//      printf("On power up state is ON\r\n");
+//      lightbulb_state.onoff_current = MESH_GENERIC_ON_OFF_STATE_ON;
+//      lightbulb_state.onoff_target = MESH_GENERIC_ON_OFF_STATE_ON;
+//      LEDS_SetState(LED_STATE_ON);
+//      LEDS_SetTemperature(lightbulb_state.temperature_default, lightbulb_state.deltauv_default, 0);
+//      break;
+//    case MESH_GENERIC_ON_POWER_UP_STATE_RESTORE:
+//      printf("On power up state is RESTORE\r\n");
+//      if (lightbulb_state.onoff_current != lightbulb_state.onoff_target) {
+//        uint32_t transition_ms = default_transition_time();
+//
+//        if (transition_ms > 0) {
+//          printf("Starting on power up transition\r\n");
+//          if (lightbulb_state.onoff_target == MESH_GENERIC_ON_OFF_STATE_OFF) {
+//            LEDS_SetLevel(0, transition_ms);
+//          } else {
+//            LEDS_SetLevel(0xFFFF, transition_ms);
+//          }
+//          // state is updated when transition is complete
+//          gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_ONOFF_TRANSITION, 1);
+//        } else {
+//          // update current state without any transition time
+//          if (lightbulb_state.onoff_target == MESH_GENERIC_ON_OFF_STATE_OFF) {
+//            LEDS_SetState(LED_STATE_OFF);
+//          } else {
+//            LEDS_SetState(LED_STATE_ON);
+//          }
+//          lightbulb_state.onoff_current = lightbulb_state.onoff_target;
+//        }
+//      } else {
+//        printf("Keeping loaded state\r\n");
+//        if (lightbulb_state.onoff_current == MESH_GENERIC_ON_OFF_STATE_OFF) {
+//          LEDS_SetState(LED_STATE_OFF);
+//        } else {
+//          LEDS_SetState(LED_STATE_ON);
+//        }
+//      }
+//
+//      if (lightbulb_state.temperature_current != lightbulb_state.temperature_target) {
+//        LEDS_SetTemperature(lightbulb_state.temperature_target, lightbulb_state.deltauv_target, lightbulb_state.transtime);
+//      } else {
+//        LEDS_SetTemperature(lightbulb_state.temperature_current, lightbulb_state.deltauv_current, 0);
+//      }
+//      break;
+//  }
 
-  // Handle on power up behavior
-  switch (lightbulb_state.onpowerup) {
-    case MESH_GENERIC_ON_POWER_UP_STATE_OFF:
-      printf("On power up state is OFF\r\n");
-      lightbulb_state.onoff_current = MESH_GENERIC_ON_OFF_STATE_OFF;
-      lightbulb_state.onoff_target = MESH_GENERIC_ON_OFF_STATE_OFF;
-      LEDS_SetState(LED_STATE_OFF);
-      LEDS_SetTemperature(lightbulb_state.temperature_default, lightbulb_state.deltauv_default, 0);
-      break;
-    case MESH_GENERIC_ON_POWER_UP_STATE_ON:
-      printf("On power up state is ON\r\n");
-      lightbulb_state.onoff_current = MESH_GENERIC_ON_OFF_STATE_ON;
-      lightbulb_state.onoff_target = MESH_GENERIC_ON_OFF_STATE_ON;
-      LEDS_SetState(LED_STATE_ON);
-      LEDS_SetTemperature(lightbulb_state.temperature_default, lightbulb_state.deltauv_default, 0);
-      break;
-    case MESH_GENERIC_ON_POWER_UP_STATE_RESTORE:
-      printf("On power up state is RESTORE\r\n");
-      if (lightbulb_state.onoff_current != lightbulb_state.onoff_target) {
-        uint32_t transition_ms = default_transition_time();
-
-        if (transition_ms > 0) {
-          printf("Starting on power up transition\r\n");
-          if (lightbulb_state.onoff_target == MESH_GENERIC_ON_OFF_STATE_OFF) {
-            LEDS_SetLevel(0, transition_ms);
-          } else {
-            LEDS_SetLevel(0xFFFF, transition_ms);
-          }
-          // state is updated when transition is complete
-          gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_ONOFF_TRANSITION, 1);
-        } else {
-          // update current state without any transition time
-          if (lightbulb_state.onoff_target == MESH_GENERIC_ON_OFF_STATE_OFF) {
-            LEDS_SetState(LED_STATE_OFF);
-          } else {
-            LEDS_SetState(LED_STATE_ON);
-          }
-          lightbulb_state.onoff_current = lightbulb_state.onoff_target;
-        }
-      } else {
-        printf("Keeping loaded state\r\n");
-        if (lightbulb_state.onoff_current == MESH_GENERIC_ON_OFF_STATE_OFF) {
-          LEDS_SetState(LED_STATE_OFF);
-        } else {
-          LEDS_SetState(LED_STATE_ON);
-        }
-      }
-
-      if (lightbulb_state.temperature_current != lightbulb_state.temperature_target) {
-        LEDS_SetTemperature(lightbulb_state.temperature_target, lightbulb_state.deltauv_target, lightbulb_state.transtime);
-      } else {
-        LEDS_SetTemperature(lightbulb_state.temperature_current, lightbulb_state.deltauv_current, 0);
-      }
-      break;
-  }
-
-  publish:
-  lightbulb_state_changed();
+//  publish:
+//  lightbulb_state_changed();
   init_models();
-  onoff_update_and_publish(_primary_elem_index);
-  power_onoff_update_and_publish(_primary_elem_index);
+//  onoff_update_and_publish(_primary_elem_index);
+//  power_onoff_update_and_publish(_primary_elem_index);
 
-  init_done = 1;
+//  init_done = 1;
 }
 
 static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt);
@@ -1631,7 +1637,7 @@ void set_device_name(bd_addr *pAddr)
   }
 
   // show device name on the LCD
-  DI_Print(name, DI_ROW_NAME);
+//  DI_Print(name, DI_ROW_NAME);
 }
 
 /**
@@ -2013,7 +2019,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         result = gecko_cmd_mesh_node_init()->result;
         if (result) {
           sprintf(buf, "init failed (0x%x)", result);
-          DI_Print(buf, DI_ROW_STATUS);
+//          DI_Print(buf, DI_ROW_STATUS);
         }
 
         // re-initialize LEDs (needed for those radio board that share same GPIO for button/LED)
@@ -2039,59 +2045,59 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
           lightbulb_state_store();
           break;
 
-        case TIMER_ID_DELAYED_ONOFF:
-          /* delay for an on/off request has passed, now process the request */
-          delayed_onoff_request();
-          break;
+//        case TIMER_ID_DELAYED_ONOFF:
+//          /* delay for an on/off request has passed, now process the request */
+//          delayed_onoff_request();
+//          break;
 
-        case TIMER_ID_DELAYED_LIGHTNESS:
-          /* delay for a lightness request has passed, now process the request */
-          delayed_lightness_request();
-          break;
+//        case TIMER_ID_DELAYED_LIGHTNESS:
+//          /* delay for a lightness request has passed, now process the request */
+//          delayed_lightness_request();
+//          break;
 
-        case TIMER_ID_DELAYED_PRI_LEVEL:
-          /* delay for a primary generic level request has passed, now process the request */
-          delayed_pri_level_request();
-          break;
+//        case TIMER_ID_DELAYED_PRI_LEVEL:
+//          /* delay for a primary generic level request has passed, now process the request */
+//          delayed_pri_level_request();
+//          break;
 
-        case TIMER_ID_DELAYED_CTL:
-          /* delay for a ctl request has passed, now process the request */
-          delayed_ctl_request();
-          break;
+//        case TIMER_ID_DELAYED_CTL:
+//          /* delay for a ctl request has passed, now process the request */
+//          delayed_ctl_request();
+//          break;
 
-        case TIMER_ID_DELAYED_CTL_TEMPERATURE:
-          /* delay for a ctl temperature request has passed, now process the request */
-          delayed_ctl_temperature_request();
-          break;
+//        case TIMER_ID_DELAYED_CTL_TEMPERATURE:
+//          /* delay for a ctl temperature request has passed, now process the request */
+//          delayed_ctl_temperature_request();
+//          break;
 
-        case TIMER_ID_DELAYED_SEC_LEVEL:
-          /* delay for a secondary generic level request has passed, now process the request */
-          delayed_sec_level_request();
-          break;
+//        case TIMER_ID_DELAYED_SEC_LEVEL:
+//          /* delay for a secondary generic level request has passed, now process the request */
+//          delayed_sec_level_request();
+//          break;
 
-        case TIMER_ID_ONOFF_TRANSITION:
-          onoff_transition_complete();
-          break;
+//        case TIMER_ID_ONOFF_TRANSITION:
+//          onoff_transition_complete();
+//          break;
 
-        case TIMER_ID_LIGHTNESS_TRANSITION:
-          lightness_transition_complete();
-          break;
+//        case TIMER_ID_LIGHTNESS_TRANSITION:
+//          lightness_transition_complete();
+//          break;
 
-        case TIMER_ID_PRI_LEVEL_TRANSITION:
-//          pri_level_transition_complete();
-          break;
+//        case TIMER_ID_PRI_LEVEL_TRANSITION:
+////          pri_level_transition_complete();
+//          break;
 
-        case TIMER_ID_CTL_TRANSITION:
-          ctl_transition_complete();
-          break;
+//        case TIMER_ID_CTL_TRANSITION:
+//          ctl_transition_complete();
+//          break;
 
-        case TIMER_ID_CTL_TEMP_TRANSITION:
-          ctl_temperature_transition_complete();
-          break;
-
-        case TIMER_ID_SEC_LEVEL_TRANSITION:
-          sec_level_transition_complete();
-          break;
+//        case TIMER_ID_CTL_TEMP_TRANSITION:
+//          ctl_temperature_transition_complete();
+//          break;
+//
+//        case TIMER_ID_SEC_LEVEL_TRANSITION:
+//          sec_level_transition_complete();
+//          break;
 
         default:
           break;
@@ -2114,12 +2120,11 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         _secondary_elem_index = 1; // index of secondary element is one.
         lightbulb_state_init();
 
-        printf("Light initial state is <%s>\r\n", lightbulb_state.onoff_current ? "ON" : "OFF");
-        DI_Print("provisioned", DI_ROW_STATUS);
-//        printf("Enabling the LETIMER\r\n");
+//        printf("Light initial state is <%s>\r\n", lightbulb_state.onoff_current ? "ON" : "OFF");
+//        DI_Print("provisioned", DI_ROW_STATUS);
       } else {
         printf("node is unprovisioned\r\n");
-        DI_Print("unprovisioned", DI_ROW_STATUS);
+//        DI_Print("unprovisioned", DI_ROW_STATUS);
 
         printf("starting unprovisioned beaconing...\r\n");
         gecko_cmd_mesh_node_start_unprov_beaconing(0x3);   // enable ADV and GATT provisioning bearer
@@ -2128,7 +2133,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_node_provisioning_started_id:
       printf("Started provisioning\r\n");
-      DI_Print("provisioning...", DI_ROW_STATUS);
+//      DI_Print("provisioning...", DI_ROW_STATUS);
       // start timer for blinking LEDs to indicate which node is being provisioned
       gecko_cmd_hardware_set_soft_timer(32768 / 4, TIMER_ID_PROVISIONING, 0);
       break;
@@ -2142,13 +2147,13 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_PROVISIONING, 0);
       LEDS_SetState(LED_STATE_OFF);
       LEDS_SetTemperature(DEFAULT_TEMPERATURE, DEFAULT_DELTAUV, 0);
-      DI_Print("provisioned", DI_ROW_STATUS);
+//      DI_Print("provisioned", DI_ROW_STATUS);
       break;
 
     case gecko_evt_mesh_node_provisioning_failed_id:
       prov_fail_evt = (struct gecko_msg_mesh_node_provisioning_failed_evt_t  *)&(evt->data);
       printf("provisioning failed, code %x\r\n", prov_fail_evt->result);
-      DI_Print("prov failed", DI_ROW_STATUS);
+//      DI_Print("prov failed", DI_ROW_STATUS);
       /* start a one-shot timer that will trigger soft reset after small delay */
       gecko_cmd_hardware_set_soft_timer(2 * 32768, TIMER_ID_RESTART, 1);
       break;
@@ -2191,7 +2196,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_friend_friendship_terminated_id:
       printf("evt gecko_evt_mesh_friend_friendship_terminated, reason=%x\r\n", evt->data.evt_mesh_friend_friendship_terminated.reason);
-      DI_Print("NO LPN", DI_ROW_FRIEND);
+//      DI_Print("NO LPN", DI_ROW_FRIEND);
       printf("Disabling the LETIMER\r\n");
 //      letimer_disable();
       break;
@@ -2204,7 +2209,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       printf("evt:gecko_evt_le_connection_opened_id\r\n");
       num_connections++;
       conn_handle = evt->data.evt_le_connection_opened.connection;
-      DI_Print("connected", DI_ROW_CONNECTION);
+//      DI_Print("connected", DI_ROW_CONNECTION);
       break;
 
     case gecko_evt_le_connection_parameters_id:
@@ -2222,7 +2227,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       conn_handle = 0xFF;
       if (num_connections > 0) {
         if (--num_connections == 0) {
-          DI_Print("", DI_ROW_CONNECTION);
+//          DI_Print("", DI_ROW_CONNECTION);
         }
       }
       break;
@@ -2243,16 +2248,13 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_system_external_signal_id:
     {
-      uint16_t current_level;
-      char tmp[21];
+      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_SEND_CURRENT_VALUE) {
 
-      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_SEND_CURRENT_VALUE)) {
-
-   		  printf("ADC Raw Value: %lu\r\n",avg_adcValue);
+//   		  printf("ADC Raw Value: %lu\r\n",avg_adcValue);
 
    		  float voltage = ((float)avg_adcValue*3.3)/4095;
 
-   		  printf("ADC Voltage: %f\r\n",voltage);
+//   		  printf("ADC Voltage: %f\r\n",voltage);
 
    		  uint16_t current = (voltage/330.0)*2000*707;
 
@@ -2260,45 +2262,35 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
    		  avg_adcValue = 0;
 
-		  printf("Sending Current Value to Gateway:%umA\r\n",current);
+   		  uint32_t epochTime = RTCC_CounterGet();
+		  printf("Sending --> Gateway. Current:%umA @ %lus\r\n",current,epochTime);
 
-//		  lightbulb_state.lightness_current = current;
-//		  lightbulb_state.temperature_current = current*1000;
-//		  lightbulb_state.deltauv_current = 1234;
-//
-//		  lightbulb_state.lightness_target = current;
-//		  lightbulb_state.temperature_target = current*1000;
-//		  lightbulb_state.deltauv_target = 1235;
-
-		  uint32_t epochTime = RTCC_CounterGet();
-		  printf("--EpochTime--> %lu\r\n",epochTime);
 		  errorcode_t err = ctl_update_and_publishReadings(0,current,epochTime);
-		  epochTime += 10;
 		  if(err){
 			  printf("Publish Update Failed\r\n");
 		  }
       }
 
 
-      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_LED_LEVEL_CHANGED)) {
-        /* this signal from the LED PWM driver indicates that the level has changed,
-         * we use it here to update the LCD status */
-        current_level = LEDS_GetLevel();
-        sprintf(tmp, "Lightness: %5u%%", ++current_level * 100 / 65535);
-        DI_Print(tmp, DI_ROW_LIGHTNESS);
-      }
-
-      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_LED_TEMPERATURE_CHANGED)) {
-        /* this signal from the LED driver indicates that the temperature level has changed,
-         * we use it here to update the LCD status */
-        current_level = LEDS_GetTemperature();
-        sprintf(tmp, "ColorTemp: %5uK", current_level);
-        DI_Print(tmp, DI_ROW_TEMPERATURE);
-
-        current_level = LEDS_GetDeltaUV();
-        sprintf(tmp, "Delta UV: %6d ", current_level);
-        DI_Print(tmp, DI_ROW_DELTAUV);
-      }
+//      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_LED_LEVEL_CHANGED)) {
+//        /* this signal from the LED PWM driver indicates that the level has changed,
+//         * we use it here to update the LCD status */
+//        current_level = LEDS_GetLevel();
+//        sprintf(tmp, "Lightness: %5u%%", ++current_level * 100 / 65535);
+//        DI_Print(tmp, DI_ROW_LIGHTNESS);
+//      }
+//
+//      if (init_done && (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_LED_TEMPERATURE_CHANGED)) {
+//        /* this signal from the LED driver indicates that the temperature level has changed,
+//         * we use it here to update the LCD status */
+//        current_level = LEDS_GetTemperature();
+//        sprintf(tmp, "ColorTemp: %5uK", current_level);
+//        DI_Print(tmp, DI_ROW_TEMPERATURE);
+//
+//        current_level = LEDS_GetDeltaUV();
+//        sprintf(tmp, "Delta UV: %6d ", current_level);
+//        DI_Print(tmp, DI_ROW_DELTAUV);
+//      }
     }
     break;
 

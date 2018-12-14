@@ -6,8 +6,8 @@
 #define SRC_APP_INCLUDE_H_
 
 #define LETIMER_MIN_ENERGYSTATE 3
-#define LETIMER0_Period 		10			//seconds
-#define LETIMER0_On_Time 		1			//milisonds
+#define LETIMER0_Period 		30			//seconds
+#define LETIMER0_On_Time 		1			//milisonds - do not change
 
 #define max(a,b) (a>b)?(a):(b)
 
