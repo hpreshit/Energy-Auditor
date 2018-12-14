@@ -22,6 +22,7 @@ void DI_Init(void)
 
 void DI_Print(char *str, uint8 row)
 {
+	return;
   if (display_interface.print == NULL) {
     printf("DI_Print: %s\r\n", str);
     return;

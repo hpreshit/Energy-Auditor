@@ -36,7 +36,7 @@ appPlugin: slot-manager=false
     <informativeText>Abstract:  The generic_access service contains generic information about the device. All available Characteristics are readonly.  </informativeText>
     <characteristic id="device_name" name="Device Name" sourceId="org.bluetooth.characteristic.gap.device_name" uuid="2A00">
       <informativeText/>
-      <value length="20" type="utf-8" variable_length="true">BlueGecko Mesh Demo </value>
+      <value length="20" type="utf-8" variable_length="true">Gateway Node</value>
       <properties const="false" const_requirement="optional" read="true" read_requirement="mandatory"/>
     </characteristic>
     <characteristic name="Appearance" sourceId="org.bluetooth.characteristic.gap.appearance" uuid="2A01">
@@ -111,16 +111,16 @@ appPlugin: slot-manager=false
         "NumS": "5",
         "NumV": "0",
         "SIG Models": [
-          "0",
-          "Configuration Server",
-          "2",
-          "Health Server",
-          "1305",
-          "Light CTL Client",
+          "1001",
+          "Generic OnOff Client",
           "1008",
           "Generic Power OnOff Client",
-          "1001",
-          "Generic OnOff Client"]
+          "2",
+          "Health Server",
+          "0",
+          "Configuration Server",
+          "1305",
+          "Light CTL Client"]
         ,
         "Vendor Models": [
           ]

@@ -48,51 +48,51 @@ static uint8_t temp_transitioning;
 #define MAX_BRIGHTNESS  0xFFFE
 
 // local functions
-
-static void timer_init(void)
-{
-  TIMER_Init_TypeDef sTimerInit = TIMER_INIT_DEFAULT;
-  TIMER_InitCC_TypeDef sInitCC = TIMER_INITCC_DEFAULT;
-
-  CMU_ClockEnable(cmuClock_TIMER0, true);
-  CMU_ClockEnable(cmuClock_TIMER1, true);
-
-  sTimerInit.prescale = timerPrescale1;
-  sTimerInit.clkSel = timerClkSelHFPerClk;
-  sTimerInit.mode = timerModeUp;
-
-  TIMER_Init(TIMER0, &sTimerInit);
-  TIMER_Init(TIMER1, &sTimerInit);
-
-  TIMER0->ROUTELOC0 = LED0_ROUTELOC | LED1_ROUTELOC;
-  TIMER0->ROUTEPEN = TIMER_ROUTEPEN_CC0PEN | TIMER_ROUTEPEN_CC1PEN;
-
-  sInitCC.mode = timerCCModePWM;
-  TIMER_InitCC(TIMER0, 0, &sInitCC);
-  TIMER_InitCC(TIMER0, 1, &sInitCC);
-
-#ifdef LED_ACTIVE_LOW
-  TIMER_CompareSet(TIMER0, 0, MAX_BRIGHTNESS);
-  TIMER_CompareSet(TIMER0, 1, MAX_BRIGHTNESS);
-#else
-  TIMER_CompareSet(TIMER0, 0, MIN_BRIGHTNESS);
-  TIMER_CompareSet(TIMER0, 1, MIN_BRIGHTNESS);
-#endif
-
-  TIMER_TopSet(TIMER0, 0xFFFF);
-
-  TIMER_Enable(TIMER0, 1);
-
-  NVIC_ClearPendingIRQ(TIMER0_IRQn);
-  NVIC_EnableIRQ(TIMER0_IRQn);
-
-  TIMER_TopSet(TIMER1, 0x9600);
-
-  TIMER_Enable(TIMER1, 1);
-
-  NVIC_ClearPendingIRQ(TIMER1_IRQn);
-  NVIC_EnableIRQ(TIMER1_IRQn);
-}
+//
+//static void timer_init(void)
+//{
+//  TIMER_Init_TypeDef sTimerInit = TIMER_INIT_DEFAULT;
+//  TIMER_InitCC_TypeDef sInitCC = TIMER_INITCC_DEFAULT;
+//
+//  CMU_ClockEnable(cmuClock_TIMER0, true);
+//  CMU_ClockEnable(cmuClock_TIMER1, true);
+//
+//  sTimerInit.prescale = timerPrescale1;
+//  sTimerInit.clkSel = timerClkSelHFPerClk;
+//  sTimerInit.mode = timerModeUp;
+//
+//  TIMER_Init(TIMER0, &sTimerInit);
+//  TIMER_Init(TIMER1, &sTimerInit);
+//
+//  TIMER0->ROUTELOC0 = LED0_ROUTELOC | LED1_ROUTELOC;
+//  TIMER0->ROUTEPEN = TIMER_ROUTEPEN_CC0PEN | TIMER_ROUTEPEN_CC1PEN;
+//
+//  sInitCC.mode = timerCCModePWM;
+//  TIMER_InitCC(TIMER0, 0, &sInitCC);
+//  TIMER_InitCC(TIMER0, 1, &sInitCC);
+//
+//#ifdef LED_ACTIVE_LOW
+//  TIMER_CompareSet(TIMER0, 0, MAX_BRIGHTNESS);
+//  TIMER_CompareSet(TIMER0, 1, MAX_BRIGHTNESS);
+//#else
+//  TIMER_CompareSet(TIMER0, 0, MIN_BRIGHTNESS);
+//  TIMER_CompareSet(TIMER0, 1, MIN_BRIGHTNESS);
+//#endif
+//
+//  TIMER_TopSet(TIMER0, 0xFFFF);
+//
+//  TIMER_Enable(TIMER0, 1);
+//
+//  NVIC_ClearPendingIRQ(TIMER0_IRQn);
+//  NVIC_EnableIRQ(TIMER0_IRQn);
+//
+//  TIMER_TopSet(TIMER1, 0x9600);
+//
+//  TIMER_Enable(TIMER1, 1);
+//
+//  NVIC_ClearPendingIRQ(TIMER1_IRQn);
+//  NVIC_EnableIRQ(TIMER1_IRQn);
+//}
 
 static void timer_irq_enable(TIMER_TypeDef *timer, int enabled)
 {
@@ -221,16 +221,16 @@ void LEDS_SetLevel(uint16_t level, uint16_t delay_ms)
 
   if (delay_ms == 0) {
     current_level = level;
-    TIMER_CompareSet(TIMER0, 0, current_level);
-    TIMER_CompareSet(TIMER0, 1, current_level);
+//    TIMER_CompareSet(TIMER0, 0, current_level);
+//    TIMER_CompareSet(TIMER0, 1, current_level);
 
     /* if a transition was in progress, cancel it */
     if (level_transitioning) {
       level_transitioning = 0;
-      timer_irq_enable(TIMER0, 0);
+//      timer_irq_enable(TIMER0, 0);
     }
 
-    gecko_external_signal(EXT_SIGNAL_LED_LEVEL_CHANGED);
+//    gecko_external_signal(EXT_SIGNAL_LED_LEVEL_CHANGED);
     return;
   }
 

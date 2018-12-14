@@ -141,7 +141,7 @@ static uint16 _secondary_elem_index = 0xffff; /* For indexing elements of the no
 static uint16 _my_address = 0;    /* Address of the Primary Element of the Node */
 static uint8 num_connections = 0;     /* number of active Bluetooth connections */
 static uint8 conn_handle = 0xFF;      /* handle of the last opened LE connection */
-static uint8 init_done = 0;
+//static uint8 init_done = 0;
 
 //gunj
 bd_addr myBTAddr = {0};
@@ -193,36 +193,36 @@ uint32_t delayed_ctl_temperature_trans = 0;
 uint32_t delayed_pri_level_trans = 0;
 uint32_t delayed_sec_level_trans = 0;
 
-static int lightbulb_state_load(void);
+//static int lightbulb_state_load(void);
 static int lightbulb_state_store(void);
 static void lightbulb_state_changed(void);
 
-static uint32_t default_transition_time(void)
-{
-  return mesh_lib_transition_time_to_ms(lightbulb_state.transtime);
-}
-
-static errorcode_t onoff_response(uint16_t element_index,
-                                  uint16_t client_addr,
-                                  uint16_t appkey_index)
-{
-  struct mesh_generic_state current, target;
-
-  current.kind = mesh_generic_state_on_off;
-  current.on_off.on = lightbulb_state.onoff_current;
-
-  target.kind = mesh_generic_state_on_off;
-  target.on_off.on = lightbulb_state.onoff_target;
-
-  return mesh_lib_generic_server_response(MESH_GENERIC_ON_OFF_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          &target,
-                                          0,
-                                          0x00);
-}
+//static uint32_t default_transition_time(void)
+//{
+//  return mesh_lib_transition_time_to_ms(lightbulb_state.transtime);
+//}
+//
+//static errorcode_t onoff_response(uint16_t element_index,
+//                                  uint16_t client_addr,
+//                                  uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current, target;
+//
+//  current.kind = mesh_generic_state_on_off;
+//  current.on_off.on = lightbulb_state.onoff_current;
+//
+//  target.kind = mesh_generic_state_on_off;
+//  target.on_off.on = lightbulb_state.onoff_target;
+//
+//  return mesh_lib_generic_server_response(MESH_GENERIC_ON_OFF_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          &target,
+//                                          0,
+//                                          0x00);
+//}
 
 static errorcode_t onoff_update(uint16_t element_index)
 {
@@ -338,29 +338,29 @@ static void onoff_change(uint16_t model_id,
     printf("dummy onoff change - same state as before\r\n");
   }
 }
-
-static errorcode_t lightness_response(uint16_t element_index,
-                                      uint16_t client_addr,
-                                      uint16_t appkey_index)
-{
-  struct mesh_generic_state current, target;
-
-  current.kind = mesh_lighting_state_lightness_actual;
-  current.lightness.level = lightbulb_state.lightness_current;
-
-  target.kind = mesh_lighting_state_lightness_actual;
-  target.lightness.level = lightbulb_state.lightness_target;
-
-  return mesh_lib_generic_server_response(MESH_LIGHTING_LIGHTNESS_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          &target,
-                                          0,
-                                          0x00);
-}
-
+//
+//static errorcode_t lightness_response(uint16_t element_index,
+//                                      uint16_t client_addr,
+//                                      uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current, target;
+//
+//  current.kind = mesh_lighting_state_lightness_actual;
+//  current.lightness.level = lightbulb_state.lightness_current;
+//
+//  target.kind = mesh_lighting_state_lightness_actual;
+//  target.lightness.level = lightbulb_state.lightness_target;
+//
+//  return mesh_lib_generic_server_response(MESH_LIGHTING_LIGHTNESS_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          &target,
+//                                          0,
+//                                          0x00);
+//}
+//
 static errorcode_t lightness_update(uint16_t element_index)
 {
   struct mesh_generic_state current, target;
@@ -391,109 +391,109 @@ static errorcode_t lightness_update_and_publish(uint16_t element_index)
 
   return e;
 }
-
-static void lightness_request(uint16_t model_id,
-                              uint16_t element_index,
-                              uint16_t client_addr,
-                              uint16_t server_addr,
-                              uint16_t appkey_index,
-                              const struct mesh_generic_request *request,
-                              uint32_t transition_ms,
-                              uint16_t delay_ms,
-                              uint8_t request_flags)
-{
-	return;
-  // for simplicity, this demo assumes that all lightness requests use the actual scale.
-  // other type of requests are ignored
-  if (request->kind != mesh_lighting_request_lightness_actual) {
-    return;
-  }
-
-  printf("lightness_request: level=%u, transition=%lu, delay=%u\r\n",
-         request->lightness, transition_ms, delay_ms);
-
-  if (lightbulb_state.lightness_current == request->lightness) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Setting lightness to <%u>\r\n", request->lightness);
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.lightness_current = request->lightness;
-      lightbulb_state.lightness_target = request->lightness;
-      if (request->lightness != 0) {
-        lightbulb_state.lightness_last = request->lightness;
-      }
-
-      // update LED PWM duty cycle
-      LEDS_SetLevel(lightbulb_state.lightness_current, 0);
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the light change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.lightness_target = request->lightness;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_LIGHTNESS, 1);
-      // store transition parameter for later use
-      delayed_lightness_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.lightness_target = request->lightness;
-      LEDS_SetLevel(lightbulb_state.lightness_target, transition_ms);
-
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_LIGHTNESS_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    lightness_response(element_index, client_addr, appkey_index);
-  } else {
-    lightness_update(element_index);
-  }
-}
-
-static void lightness_change(uint16_t model_id,
-                             uint16_t element_index,
-                             const struct mesh_generic_state *current,
-                             const struct mesh_generic_state *target,
-                             uint32_t remaining_ms)
-{
-	return;
-  if (current->kind != mesh_lighting_state_lightness_actual) {
-    // if kind is not 'actual' then just report the change here, no change to light state
-    printf("lightness change, kind %u, value %u\r\n", current->kind, current->lightness.level);
-    return;
-  }
-
-  if (lightbulb_state.lightness_current != current->lightness.level) {
-    printf("lightness_change: from %u to %u\r\n", lightbulb_state.lightness_current, current->lightness.level);
-    lightbulb_state.lightness_current = current->lightness.level;
-    lightbulb_state_changed();
-  } else {
-    printf("lightness update -same value (%d)\r\n", lightbulb_state.lightness_current);
-  }
-}
-
-static errorcode_t pri_level_response(uint16_t element_index,
-                                      uint16_t client_addr,
-                                      uint16_t appkey_index)
-{
-  struct mesh_generic_state current, target;
-
-  current.kind = mesh_generic_state_level;
-  current.level.level = lightbulb_state.pri_level_current;
-
-  target.kind = mesh_generic_state_level;
-  target.level.level = lightbulb_state.pri_level_target;
-
-  return mesh_lib_generic_server_response(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          &target,
-                                          0,
-                                          0x00);
-}
+//
+//static void lightness_request(uint16_t model_id,
+//                              uint16_t element_index,
+//                              uint16_t client_addr,
+//                              uint16_t server_addr,
+//                              uint16_t appkey_index,
+//                              const struct mesh_generic_request *request,
+//                              uint32_t transition_ms,
+//                              uint16_t delay_ms,
+//                              uint8_t request_flags)
+//{
+//	return;
+//  // for simplicity, this demo assumes that all lightness requests use the actual scale.
+//  // other type of requests are ignored
+//  if (request->kind != mesh_lighting_request_lightness_actual) {
+//    return;
+//  }
+//
+//  printf("lightness_request: level=%u, transition=%lu, delay=%u\r\n",
+//         request->lightness, transition_ms, delay_ms);
+//
+//  if (lightbulb_state.lightness_current == request->lightness) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Setting lightness to <%u>\r\n", request->lightness);
+//    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
+//      lightbulb_state.lightness_current = request->lightness;
+//      lightbulb_state.lightness_target = request->lightness;
+//      if (request->lightness != 0) {
+//        lightbulb_state.lightness_last = request->lightness;
+//      }
+//
+//      // update LED PWM duty cycle
+//      LEDS_SetLevel(lightbulb_state.lightness_current, 0);
+//    } else if (delay_ms > 0) {
+//      // a delay has been specified for the light change. Start a soft timer
+//      // that will trigger the change after the given delay
+//      // Current state remains as is for now
+//      lightbulb_state.lightness_target = request->lightness;
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_LIGHTNESS, 1);
+//      // store transition parameter for later use
+//      delayed_lightness_trans = transition_ms;
+//    } else {
+//      // no delay but transition time has been set.
+//      lightbulb_state.lightness_target = request->lightness;
+//      LEDS_SetLevel(lightbulb_state.lightness_target, transition_ms);
+//
+//      // lightbulb current state will be updated when transition is complete
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_LIGHTNESS_TRANSITION, 1);
+//    }
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    lightness_response(element_index, client_addr, appkey_index);
+//  } else {
+//    lightness_update(element_index);
+//  }
+//}
+//
+//static void lightness_change(uint16_t model_id,
+//                             uint16_t element_index,
+//                             const struct mesh_generic_state *current,
+//                             const struct mesh_generic_state *target,
+//                             uint32_t remaining_ms)
+//{
+//	return;
+//  if (current->kind != mesh_lighting_state_lightness_actual) {
+//    // if kind is not 'actual' then just report the change here, no change to light state
+//    printf("lightness change, kind %u, value %u\r\n", current->kind, current->lightness.level);
+//    return;
+//  }
+//
+//  if (lightbulb_state.lightness_current != current->lightness.level) {
+//    printf("lightness_change: from %u to %u\r\n", lightbulb_state.lightness_current, current->lightness.level);
+//    lightbulb_state.lightness_current = current->lightness.level;
+//    lightbulb_state_changed();
+//  } else {
+//    printf("lightness update -same value (%d)\r\n", lightbulb_state.lightness_current);
+//  }
+//}
+////
+//static errorcode_t pri_level_response(uint16_t element_index,
+//                                      uint16_t client_addr,
+//                                      uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current, target;
+//
+//  current.kind = mesh_generic_state_level;
+//  current.level.level = lightbulb_state.pri_level_current;
+//
+//  target.kind = mesh_generic_state_level;
+//  target.level.level = lightbulb_state.pri_level_target;
+//
+//  return mesh_lib_generic_server_response(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          &target,
+//                                          0,
+//                                          0x00);
+//}
 
 static errorcode_t pri_level_update(uint16_t element_index)
 {
@@ -526,87 +526,87 @@ static errorcode_t pri_level_update_and_publish(uint16_t element_index)
   return e;
 }
 
-static void pri_level_request(uint16_t model_id,
-                              uint16_t element_index,
-                              uint16_t client_addr,
-                              uint16_t server_addr,
-                              uint16_t appkey_index,
-                              const struct mesh_generic_request *request,
-                              uint32_t transition_ms,
-                              uint16_t delay_ms,
-                              uint8_t request_flags)
-{
-	return;
-  // for simplicity, this demo assumes that all level requests use set level.
-  // other type of requests are ignored
-
-  uint16_t lightness;
-
-  if (request->kind != mesh_generic_request_level) {
-    return;
-  }
-
-  printf("pri_level_request: level=%d, transition=%lu, delay=%u\r\n",
-         request->level, transition_ms, delay_ms);
-
-  if (lightbulb_state.pri_level_current == request->level) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Setting pri_level to <%d>\r\n", request->level);
-
-    lightness = request->level + 32768;
-
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.pri_level_current = request->level;
-      lightbulb_state.pri_level_target = request->level;
-      lightbulb_state.lightness_current = lightness;
-      lightbulb_state.lightness_target = lightness;
-
-      // update LED Temperature
-      LEDS_SetLevel(lightness, 0);
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the light change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.pri_level_target = request->level;
-      lightbulb_state.lightness_target = lightness;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_PRI_LEVEL, 1);
-      // store transition parameter for later use
-      delayed_pri_level_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.pri_level_target = request->level;
-      lightbulb_state.lightness_target = lightness;
-      LEDS_SetLevel(lightness, transition_ms);
-
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_PRI_LEVEL_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    pri_level_response(element_index, client_addr, appkey_index);
-  } else {
-    pri_level_update(element_index);
-  }
-}
-
-static void pri_level_change(uint16_t model_id,
-                             uint16_t element_index,
-                             const struct mesh_generic_state *current,
-                             const struct mesh_generic_state *target,
-                             uint32_t remaining_ms)
-{
-	return;
-  if (lightbulb_state.pri_level_current != current->level.level) {
-    printf("pri_level_change: from %d to %d\r\n", lightbulb_state.pri_level_current, current->level.level);
-    lightbulb_state.pri_level_current = current->level.level;
-    lightbulb_state_changed();
-  } else {
-    printf("pri_level update -same value (%d)\r\n", lightbulb_state.pri_level_current);
-  }
-}
+//static void pri_level_request(uint16_t model_id,
+//                              uint16_t element_index,
+//                              uint16_t client_addr,
+//                              uint16_t server_addr,
+//                              uint16_t appkey_index,
+//                              const struct mesh_generic_request *request,
+//                              uint32_t transition_ms,
+//                              uint16_t delay_ms,
+//                              uint8_t request_flags)
+//{
+//	return;
+//  // for simplicity, this demo assumes that all level requests use set level.
+//  // other type of requests are ignored
+//
+//  uint16_t lightness;
+//
+//  if (request->kind != mesh_generic_request_level) {
+//    return;
+//  }
+//
+//  printf("pri_level_request: level=%d, transition=%lu, delay=%u\r\n",
+//         request->level, transition_ms, delay_ms);
+//
+//  if (lightbulb_state.pri_level_current == request->level) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Setting pri_level to <%d>\r\n", request->level);
+//
+//    lightness = request->level + 32768;
+//
+//    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
+//      lightbulb_state.pri_level_current = request->level;
+//      lightbulb_state.pri_level_target = request->level;
+//      lightbulb_state.lightness_current = lightness;
+//      lightbulb_state.lightness_target = lightness;
+//
+//      // update LED Temperature
+//      LEDS_SetLevel(lightness, 0);
+//    } else if (delay_ms > 0) {
+//      // a delay has been specified for the light change. Start a soft timer
+//      // that will trigger the change after the given delay
+//      // Current state remains as is for now
+//      lightbulb_state.pri_level_target = request->level;
+//      lightbulb_state.lightness_target = lightness;
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_PRI_LEVEL, 1);
+//      // store transition parameter for later use
+//      delayed_pri_level_trans = transition_ms;
+//    } else {
+//      // no delay but transition time has been set.
+//      lightbulb_state.pri_level_target = request->level;
+//      lightbulb_state.lightness_target = lightness;
+//      LEDS_SetLevel(lightness, transition_ms);
+//
+//      // lightbulb current state will be updated when transition is complete
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_PRI_LEVEL_TRANSITION, 1);
+//    }
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    pri_level_response(element_index, client_addr, appkey_index);
+//  } else {
+//    pri_level_update(element_index);
+//  }
+//}
+////
+//static void pri_level_change(uint16_t model_id,
+//                             uint16_t element_index,
+//                             const struct mesh_generic_state *current,
+//                             const struct mesh_generic_state *target,
+//                             uint32_t remaining_ms)
+//{
+//	return;
+//  if (lightbulb_state.pri_level_current != current->level.level) {
+//    printf("pri_level_change: from %d to %d\r\n", lightbulb_state.pri_level_current, current->level.level);
+//    lightbulb_state.pri_level_current = current->level.level;
+//    lightbulb_state_changed();
+//  } else {
+//    printf("pri_level update -same value (%d)\r\n", lightbulb_state.pri_level_current);
+//  }
+//}
 
 static errorcode_t ctl_response(uint16_t element_index,
                                 uint16_t client_addr,
@@ -782,219 +782,219 @@ static void ctl_change(uint16_t model_id,
     printf("deltauv update -same value (%d)\r\n", lightbulb_state.deltauv_current);
   }
 }
+//
+//static errorcode_t ctl_setup_response(uint16_t element_index,
+//                                      uint16_t client_addr,
+//                                      uint16_t appkey_index,
+//                                      mesh_generic_state_t kind)
+//{
+//  struct mesh_generic_state current;
+//
+//  current.kind = kind;
+//
+//  switch (kind) {
+//    case mesh_lighting_state_ctl_default:
+//      current.ctl.lightness = lightbulb_state.lightness_default;
+//      current.ctl.temperature = lightbulb_state.temperature_default;
+//      current.ctl.deltauv = lightbulb_state.deltauv_default;
+//      break;
+//    case mesh_lighting_state_ctl_temperature_range:
+//      current.ctl_temperature_range.min = lightbulb_state.temperature_min;
+//      current.ctl_temperature_range.max = lightbulb_state.temperature_max;
+//      break;
+//    default:
+//      break;
+//  }
+//
+//  return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_SETUP_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          NULL,
+//                                          0,
+//                                          0x00);
+//}
+//
+//static errorcode_t ctl_setup_update(uint16_t element_index, mesh_generic_state_t kind)
+//{
+//  struct mesh_generic_state current;
+//
+//  current.kind = kind;
+//
+//  switch (kind) {
+//    case mesh_lighting_state_ctl_default:
+//      current.ctl.lightness = lightbulb_state.lightness_default;
+//      current.ctl.temperature = lightbulb_state.temperature_default;
+//      current.ctl.deltauv = lightbulb_state.deltauv_default;
+//      break;
+//    case mesh_lighting_state_ctl_temperature_range:
+//      current.ctl_temperature_range.min = lightbulb_state.temperature_min;
+//      current.ctl_temperature_range.max = lightbulb_state.temperature_max;
+//      break;
+//    default:
+//      break;
+//  }
+//
+//  return mesh_lib_generic_server_update(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
+//                                        element_index,
+//                                        &current,
+//                                        NULL,
+//                                        0);
+//}
+//
 
-static errorcode_t ctl_setup_response(uint16_t element_index,
-                                      uint16_t client_addr,
-                                      uint16_t appkey_index,
-                                      mesh_generic_state_t kind)
-{
-  struct mesh_generic_state current;
-
-  current.kind = kind;
-
-  switch (kind) {
-    case mesh_lighting_state_ctl_default:
-      current.ctl.lightness = lightbulb_state.lightness_default;
-      current.ctl.temperature = lightbulb_state.temperature_default;
-      current.ctl.deltauv = lightbulb_state.deltauv_default;
-      break;
-    case mesh_lighting_state_ctl_temperature_range:
-      current.ctl_temperature_range.min = lightbulb_state.temperature_min;
-      current.ctl_temperature_range.max = lightbulb_state.temperature_max;
-      break;
-    default:
-      break;
-  }
-
-  return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_SETUP_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          NULL,
-                                          0,
-                                          0x00);
-}
-
-static errorcode_t ctl_setup_update(uint16_t element_index, mesh_generic_state_t kind)
-{
-  struct mesh_generic_state current;
-
-  current.kind = kind;
-
-  switch (kind) {
-    case mesh_lighting_state_ctl_default:
-      current.ctl.lightness = lightbulb_state.lightness_default;
-      current.ctl.temperature = lightbulb_state.temperature_default;
-      current.ctl.deltauv = lightbulb_state.deltauv_default;
-      break;
-    case mesh_lighting_state_ctl_temperature_range:
-      current.ctl_temperature_range.min = lightbulb_state.temperature_min;
-      current.ctl_temperature_range.max = lightbulb_state.temperature_max;
-      break;
-    default:
-      break;
-  }
-
-  return mesh_lib_generic_server_update(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
-                                        element_index,
-                                        &current,
-                                        NULL,
-                                        0);
-}
-
-
-
-static void ctl_setup_request(uint16_t model_id,
-                              uint16_t element_index,
-                              uint16_t client_addr,
-                              uint16_t server_addr,
-                              uint16_t appkey_index,
-                              const struct mesh_generic_request *request,
-                              uint32_t transition_ms,
-                              uint16_t delay_ms,
-                              uint8_t request_flags)
-{
-	return;
-  switch (request->kind) {
-    case mesh_lighting_request_ctl_default:
-      printf("ctl_setup_request: state=ctl_default, default_lightness=%u, default_temperature=%u, default_delta_uv=%d",
-             request->ctl.lightness, request->ctl.temperature, request->ctl.deltauv);
-
-      if ((lightbulb_state.lightness_default == request->ctl.lightness)
-          && (lightbulb_state.temperature_default == request->ctl.temperature)
-          && (lightbulb_state.deltauv_default == request->ctl.deltauv)) {
-        printf("Request for current state received; no op\n");
-      } else {
-        if (lightbulb_state.lightness_default != request->ctl.lightness) {
-          printf("Setting default lightness to <%u>\r\n", request->ctl.lightness);
-          lightbulb_state.lightness_default = request->ctl.lightness;
-        }
-        if (lightbulb_state.temperature_default != request->ctl.temperature) {
-          printf("Setting default temperature to <%u>\r\n", request->ctl.temperature);
-          lightbulb_state.temperature_default = request->ctl.temperature;
-        }
-        if (lightbulb_state.deltauv_default != request->ctl.deltauv) {
-          printf("Setting default delta UV to <%d>\r\n", request->ctl.deltauv);
-          lightbulb_state.deltauv_default = request->ctl.deltauv;
-        }
-        lightbulb_state_changed();
-      }
-      break;
-
-    case mesh_lighting_request_ctl_temperature_range:
-      printf("ctl_setup_request: state=ctl_temperature_range, min_temperature=%u, max_temperature=%u",
-             request->ctl_temperature_range.min, request->ctl_temperature_range.max);
-
-      if ((lightbulb_state.temperature_min == request->ctl_temperature_range.min)
-          && (lightbulb_state.temperature_max == request->ctl_temperature_range.max)) {
-        printf("Request for current state received; no op\n");
-      } else {
-        if (lightbulb_state.temperature_min != request->ctl_temperature_range.min) {
-          printf("Setting min temperature to <%u>\r\n", request->ctl_temperature_range.min);
-          lightbulb_state.temperature_min = request->ctl_temperature_range.min;
-        }
-        if (lightbulb_state.temperature_max != request->ctl_temperature_range.max) {
-          printf("Setting max temperature to <%u>\r\n", request->ctl_temperature_range.max);
-          lightbulb_state.temperature_max = request->ctl_temperature_range.max;
-        }
-        lightbulb_state_changed();
-      }
-      break;
-
-    default:
-      break;
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    ctl_setup_response(element_index, client_addr, appkey_index, request->kind);
-  } else {
-    ctl_setup_update(element_index, request->kind);
-  }
-}
-
-static void ctl_setup_change(uint16_t model_id,
-                             uint16_t element_index,
-                             const struct mesh_generic_state *current,
-                             const struct mesh_generic_state *target,
-                             uint32_t remaining_ms)
-{
-	return;
-  switch (current->kind) {
-    case mesh_lighting_state_ctl_default:
-      if (lightbulb_state.lightness_default != current->ctl.lightness) {
-        printf("default_lightness_change: from %u to %u\r\n", lightbulb_state.lightness_default, current->ctl.lightness);
-        lightbulb_state.lightness_default = current->ctl.lightness;
-        lightbulb_state_changed();
-      } else {
-        printf("default lightness update -same value (%u)\r\n", lightbulb_state.lightness_default);
-      }
-
-      if (lightbulb_state.temperature_default != current->ctl.temperature) {
-        printf("default_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_default, current->ctl.temperature);
-        lightbulb_state.temperature_default = current->ctl.temperature;
-        lightbulb_state_changed();
-      } else {
-        printf("default temperature update -same value (%u)\r\n", lightbulb_state.temperature_default);
-      }
-
-      if (lightbulb_state.deltauv_current != current->ctl.deltauv) {
-        printf("default_deltauv_change: from %d to %d\r\n", lightbulb_state.deltauv_default, current->ctl.deltauv);
-        lightbulb_state.deltauv_default = current->ctl.deltauv;
-        lightbulb_state_changed();
-      } else {
-        printf("default deltauv update -same value (%d)\r\n", lightbulb_state.deltauv_default);
-      }
-
-      break;
-
-    case mesh_lighting_state_ctl_temperature_range:
-      if (lightbulb_state.temperature_min != current->ctl_temperature_range.min) {
-        printf("min_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_min, current->ctl_temperature_range.min);
-        lightbulb_state.temperature_min = current->ctl_temperature_range.min;
-        lightbulb_state_changed();
-      } else {
-        printf("min temperature update -same value (%u)\r\n", lightbulb_state.temperature_min);
-      }
-
-      if (lightbulb_state.temperature_max != current->ctl_temperature_range.max) {
-        printf("max_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_max, current->ctl_temperature_range.max);
-        lightbulb_state.temperature_max = current->ctl_temperature_range.max;
-        lightbulb_state_changed();
-      } else {
-        printf("max temperature update -same value (%u)\r\n", lightbulb_state.temperature_max);
-      }
-
-      break;
-
-    default:
-      break;
-  }
-}
-
-static errorcode_t ctl_temperature_response(uint16_t element_index,
-                                            uint16_t client_addr,
-                                            uint16_t appkey_index)
-{
-  struct mesh_generic_state current, target;
-
-  current.kind = mesh_lighting_state_ctl_temperature;
-  current.ctl.temperature = lightbulb_state.temperature_current;
-  current.ctl.deltauv = lightbulb_state.deltauv_current;
-
-  target.kind = mesh_lighting_state_ctl_temperature;
-  target.ctl.temperature = lightbulb_state.temperature_target;
-  target.ctl.deltauv = lightbulb_state.deltauv_target;
-
-  return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          &target,
-                                          0,
-                                          0x00);
-}
+//
+//static void ctl_setup_request(uint16_t model_id,
+//                              uint16_t element_index,
+//                              uint16_t client_addr,
+//                              uint16_t server_addr,
+//                              uint16_t appkey_index,
+//                              const struct mesh_generic_request *request,
+//                              uint32_t transition_ms,
+//                              uint16_t delay_ms,
+//                              uint8_t request_flags)
+//{
+//	return;
+//  switch (request->kind) {
+//    case mesh_lighting_request_ctl_default:
+//      printf("ctl_setup_request: state=ctl_default, default_lightness=%u, default_temperature=%u, default_delta_uv=%d",
+//             request->ctl.lightness, request->ctl.temperature, request->ctl.deltauv);
+//
+//      if ((lightbulb_state.lightness_default == request->ctl.lightness)
+//          && (lightbulb_state.temperature_default == request->ctl.temperature)
+//          && (lightbulb_state.deltauv_default == request->ctl.deltauv)) {
+//        printf("Request for current state received; no op\n");
+//      } else {
+//        if (lightbulb_state.lightness_default != request->ctl.lightness) {
+//          printf("Setting default lightness to <%u>\r\n", request->ctl.lightness);
+//          lightbulb_state.lightness_default = request->ctl.lightness;
+//        }
+//        if (lightbulb_state.temperature_default != request->ctl.temperature) {
+//          printf("Setting default temperature to <%u>\r\n", request->ctl.temperature);
+//          lightbulb_state.temperature_default = request->ctl.temperature;
+//        }
+//        if (lightbulb_state.deltauv_default != request->ctl.deltauv) {
+//          printf("Setting default delta UV to <%d>\r\n", request->ctl.deltauv);
+//          lightbulb_state.deltauv_default = request->ctl.deltauv;
+//        }
+//        lightbulb_state_changed();
+//      }
+//      break;
+//
+//    case mesh_lighting_request_ctl_temperature_range:
+//      printf("ctl_setup_request: state=ctl_temperature_range, min_temperature=%u, max_temperature=%u",
+//             request->ctl_temperature_range.min, request->ctl_temperature_range.max);
+//
+//      if ((lightbulb_state.temperature_min == request->ctl_temperature_range.min)
+//          && (lightbulb_state.temperature_max == request->ctl_temperature_range.max)) {
+//        printf("Request for current state received; no op\n");
+//      } else {
+//        if (lightbulb_state.temperature_min != request->ctl_temperature_range.min) {
+//          printf("Setting min temperature to <%u>\r\n", request->ctl_temperature_range.min);
+//          lightbulb_state.temperature_min = request->ctl_temperature_range.min;
+//        }
+//        if (lightbulb_state.temperature_max != request->ctl_temperature_range.max) {
+//          printf("Setting max temperature to <%u>\r\n", request->ctl_temperature_range.max);
+//          lightbulb_state.temperature_max = request->ctl_temperature_range.max;
+//        }
+//        lightbulb_state_changed();
+//      }
+//      break;
+//
+//    default:
+//      break;
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    ctl_setup_response(element_index, client_addr, appkey_index, request->kind);
+//  } else {
+//    ctl_setup_update(element_index, request->kind);
+//  }
+//}
+////
+//static void ctl_setup_change(uint16_t model_id,
+//                             uint16_t element_index,
+//                             const struct mesh_generic_state *current,
+//                             const struct mesh_generic_state *target,
+//                             uint32_t remaining_ms)
+//{
+//	return;
+//  switch (current->kind) {
+//    case mesh_lighting_state_ctl_default:
+//      if (lightbulb_state.lightness_default != current->ctl.lightness) {
+//        printf("default_lightness_change: from %u to %u\r\n", lightbulb_state.lightness_default, current->ctl.lightness);
+//        lightbulb_state.lightness_default = current->ctl.lightness;
+//        lightbulb_state_changed();
+//      } else {
+//        printf("default lightness update -same value (%u)\r\n", lightbulb_state.lightness_default);
+//      }
+//
+//      if (lightbulb_state.temperature_default != current->ctl.temperature) {
+//        printf("default_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_default, current->ctl.temperature);
+//        lightbulb_state.temperature_default = current->ctl.temperature;
+//        lightbulb_state_changed();
+//      } else {
+//        printf("default temperature update -same value (%u)\r\n", lightbulb_state.temperature_default);
+//      }
+//
+//      if (lightbulb_state.deltauv_current != current->ctl.deltauv) {
+//        printf("default_deltauv_change: from %d to %d\r\n", lightbulb_state.deltauv_default, current->ctl.deltauv);
+//        lightbulb_state.deltauv_default = current->ctl.deltauv;
+//        lightbulb_state_changed();
+//      } else {
+//        printf("default deltauv update -same value (%d)\r\n", lightbulb_state.deltauv_default);
+//      }
+//
+//      break;
+//
+//    case mesh_lighting_state_ctl_temperature_range:
+//      if (lightbulb_state.temperature_min != current->ctl_temperature_range.min) {
+//        printf("min_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_min, current->ctl_temperature_range.min);
+//        lightbulb_state.temperature_min = current->ctl_temperature_range.min;
+//        lightbulb_state_changed();
+//      } else {
+//        printf("min temperature update -same value (%u)\r\n", lightbulb_state.temperature_min);
+//      }
+//
+//      if (lightbulb_state.temperature_max != current->ctl_temperature_range.max) {
+//        printf("max_temperature_change: from %u to %u\r\n", lightbulb_state.temperature_max, current->ctl_temperature_range.max);
+//        lightbulb_state.temperature_max = current->ctl_temperature_range.max;
+//        lightbulb_state_changed();
+//      } else {
+//        printf("max temperature update -same value (%u)\r\n", lightbulb_state.temperature_max);
+//      }
+//
+//      break;
+//
+//    default:
+//      break;
+//  }
+//}
+//
+//static errorcode_t ctl_temperature_response(uint16_t element_index,
+//                                            uint16_t client_addr,
+//                                            uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current, target;
+//
+//  current.kind = mesh_lighting_state_ctl_temperature;
+//  current.ctl.temperature = lightbulb_state.temperature_current;
+//  current.ctl.deltauv = lightbulb_state.deltauv_current;
+//
+//  target.kind = mesh_lighting_state_ctl_temperature;
+//  target.ctl.temperature = lightbulb_state.temperature_target;
+//  target.ctl.deltauv = lightbulb_state.deltauv_target;
+//
+//  return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          &target,
+//                                          0,
+//                                          0x00);
+//}
 
 static errorcode_t ctl_temperature_update(uint16_t element_index)
 {
@@ -1028,113 +1028,113 @@ static errorcode_t ctl_temperature_update_and_publish(uint16_t element_index)
 
   return e;
 }
-
-static void ctl_temperature_request(uint16_t model_id,
-                                    uint16_t element_index,
-                                    uint16_t client_addr,
-                                    uint16_t server_addr,
-                                    uint16_t appkey_index,
-                                    const struct mesh_generic_request *request,
-                                    uint32_t transition_ms,
-                                    uint16_t delay_ms,
-                                    uint8_t request_flags)
-{
-	return;
-  printf("ctl_temperature_request: temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
-         request->ctl_temperature.temperature, request->ctl_temperature.deltauv, transition_ms, delay_ms);
-
-  if ((lightbulb_state.temperature_current == request->ctl_temperature.temperature)
-      && (lightbulb_state.deltauv_current == request->ctl_temperature.deltauv)) {
-    printf("Request for current state received; no op\n");
-  } else {
-    if (lightbulb_state.temperature_current != request->ctl_temperature.temperature) {
-      printf("Setting temperature to <%u>\r\n", request->ctl_temperature.temperature);
-    }
-    if (lightbulb_state.deltauv_current != request->ctl_temperature.deltauv) {
-      printf("Setting delta UV to <%d>\r\n", request->ctl_temperature.deltauv);
-    }
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.temperature_current = request->ctl_temperature.temperature;
-      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
-      lightbulb_state.deltauv_current = request->ctl_temperature.deltauv;
-      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
-
-      // update LED color temperature
-      LEDS_SetTemperature(lightbulb_state.temperature_current, lightbulb_state.deltauv_current, 0);
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the temperature change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
-      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_CTL_TEMPERATURE, 1);
-      // store transition parameter for later use
-      delayed_ctl_temperature_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
-      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
-
-      LEDS_SetTemperature(lightbulb_state.temperature_target, lightbulb_state.deltauv_target, transition_ms);
-
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_CTL_TEMP_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    ctl_temperature_response(element_index, client_addr, appkey_index);
-  } else {
-    ctl_temperature_update(element_index);
-  }
-}
-
-static void ctl_temperature_change(uint16_t model_id,
-                                   uint16_t element_index,
-                                   const struct mesh_generic_state *current,
-                                   const struct mesh_generic_state *target,
-                                   uint32_t remaining_ms)
-{
-	return;
-  if (lightbulb_state.temperature_current != current->ctl.temperature) {
-    printf("temperature_change: from %u to %u\r\n", lightbulb_state.temperature_current, current->ctl.temperature);
-    lightbulb_state.temperature_current = current->ctl.temperature;
-    lightbulb_state_changed();
-  } else {
-    printf("temperature update -same value (%u)\r\n", lightbulb_state.temperature_current);
-  }
-
-  if (lightbulb_state.deltauv_current != current->ctl.deltauv) {
-    printf("deltauv_change: from %d to %d\r\n", lightbulb_state.deltauv_current, current->ctl.deltauv);
-    lightbulb_state.deltauv_current = current->ctl.deltauv;
-    lightbulb_state_changed();
-  } else {
-    printf("deltauv update -same value (%d)\r\n", lightbulb_state.deltauv_current);
-  }
-}
-
-static errorcode_t sec_level_response(uint16_t element_index,
-                                      uint16_t client_addr,
-                                      uint16_t appkey_index)
-{
-  struct mesh_generic_state current, target;
-
-  current.kind = mesh_generic_state_level;
-  current.level.level = lightbulb_state.sec_level_current;
-
-  target.kind = mesh_generic_state_level;
-  target.level.level = lightbulb_state.sec_level_target;
-
-  return mesh_lib_generic_server_response(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          &target,
-                                          0,
-                                          0x00);
-}
+//
+//static void ctl_temperature_request(uint16_t model_id,
+//                                    uint16_t element_index,
+//                                    uint16_t client_addr,
+//                                    uint16_t server_addr,
+//                                    uint16_t appkey_index,
+//                                    const struct mesh_generic_request *request,
+//                                    uint32_t transition_ms,
+//                                    uint16_t delay_ms,
+//                                    uint8_t request_flags)
+//{
+//	return;
+//  printf("ctl_temperature_request: temperature=%u, delta_uv=%d, transition=%lu, delay=%u\r\n",
+//         request->ctl_temperature.temperature, request->ctl_temperature.deltauv, transition_ms, delay_ms);
+//
+//  if ((lightbulb_state.temperature_current == request->ctl_temperature.temperature)
+//      && (lightbulb_state.deltauv_current == request->ctl_temperature.deltauv)) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    if (lightbulb_state.temperature_current != request->ctl_temperature.temperature) {
+//      printf("Setting temperature to <%u>\r\n", request->ctl_temperature.temperature);
+//    }
+//    if (lightbulb_state.deltauv_current != request->ctl_temperature.deltauv) {
+//      printf("Setting delta UV to <%d>\r\n", request->ctl_temperature.deltauv);
+//    }
+//    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
+//      lightbulb_state.temperature_current = request->ctl_temperature.temperature;
+//      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
+//      lightbulb_state.deltauv_current = request->ctl_temperature.deltauv;
+//      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
+//
+//      // update LED color temperature
+//      LEDS_SetTemperature(lightbulb_state.temperature_current, lightbulb_state.deltauv_current, 0);
+//    } else if (delay_ms > 0) {
+//      // a delay has been specified for the temperature change. Start a soft timer
+//      // that will trigger the change after the given delay
+//      // Current state remains as is for now
+//      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
+//      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_CTL_TEMPERATURE, 1);
+//      // store transition parameter for later use
+//      delayed_ctl_temperature_trans = transition_ms;
+//    } else {
+//      // no delay but transition time has been set.
+//      lightbulb_state.temperature_target = request->ctl_temperature.temperature;
+//      lightbulb_state.deltauv_target = request->ctl_temperature.deltauv;
+//
+//      LEDS_SetTemperature(lightbulb_state.temperature_target, lightbulb_state.deltauv_target, transition_ms);
+//
+//      // lightbulb current state will be updated when transition is complete
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_CTL_TEMP_TRANSITION, 1);
+//    }
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    ctl_temperature_response(element_index, client_addr, appkey_index);
+//  } else {
+//    ctl_temperature_update(element_index);
+//  }
+//}
+//
+//static void ctl_temperature_change(uint16_t model_id,
+//                                   uint16_t element_index,
+//                                   const struct mesh_generic_state *current,
+//                                   const struct mesh_generic_state *target,
+//                                   uint32_t remaining_ms)
+//{
+//	return;
+//  if (lightbulb_state.temperature_current != current->ctl.temperature) {
+//    printf("temperature_change: from %u to %u\r\n", lightbulb_state.temperature_current, current->ctl.temperature);
+//    lightbulb_state.temperature_current = current->ctl.temperature;
+//    lightbulb_state_changed();
+//  } else {
+//    printf("temperature update -same value (%u)\r\n", lightbulb_state.temperature_current);
+//  }
+//
+//  if (lightbulb_state.deltauv_current != current->ctl.deltauv) {
+//    printf("deltauv_change: from %d to %d\r\n", lightbulb_state.deltauv_current, current->ctl.deltauv);
+//    lightbulb_state.deltauv_current = current->ctl.deltauv;
+//    lightbulb_state_changed();
+//  } else {
+//    printf("deltauv update -same value (%d)\r\n", lightbulb_state.deltauv_current);
+//  }
+//}
+//
+//static errorcode_t sec_level_response(uint16_t element_index,
+//                                      uint16_t client_addr,
+//                                      uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current, target;
+//
+//  current.kind = mesh_generic_state_level;
+//  current.level.level = lightbulb_state.sec_level_current;
+//
+//  target.kind = mesh_generic_state_level;
+//  target.level.level = lightbulb_state.sec_level_target;
+//
+//  return mesh_lib_generic_server_response(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          &target,
+//                                          0,
+//                                          0x00);
+//}
 
 static errorcode_t sec_level_update(uint16_t element_index)
 {
@@ -1166,272 +1166,272 @@ static errorcode_t sec_level_update_and_publish(uint16_t element_index)
 
   return e;
 }
+//
+//static void sec_level_request(uint16_t model_id,
+//                              uint16_t element_index,
+//                              uint16_t client_addr,
+//                              uint16_t server_addr,
+//                              uint16_t appkey_index,
+//                              const struct mesh_generic_request *request,
+//                              uint32_t transition_ms,
+//                              uint16_t delay_ms,
+//                              uint8_t request_flags)
+//{
+//  // for simplicity, this demo assumes that all level requests use set level.
+//  // other type of requests are ignored
+//
+//  uint16_t temperature;
+//
+//  if (request->kind != mesh_generic_request_level) {
+//    return;
+//  }
+//
+//  printf("sec_level_request: level=%d, transition=%lu, delay=%u\r\n",
+//         request->level, transition_ms, delay_ms);
+//
+//  if (lightbulb_state.sec_level_current == request->level) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Setting sec_level to <%d>\r\n", request->level);
+//
+//    temperature = lightbulb_state.temperature_min                                       \
+//                  + (uint32_t)(request->level + (int32_t)32768)                         \
+//                  * (lightbulb_state.temperature_max - lightbulb_state.temperature_min) \
+//                  / 65535;
+//
+//    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
+//      lightbulb_state.sec_level_current = request->level;
+//      lightbulb_state.sec_level_target = request->level;
+//      lightbulb_state.temperature_current = temperature;
+//      lightbulb_state.temperature_target = temperature;
+//
+//      // update LED Temperature
+//      LEDS_SetTemperature(temperature, lightbulb_state.deltauv_current, 0);
+//    } else if (delay_ms > 0) {
+//      // a delay has been specified for the light change. Start a soft timer
+//      // that will trigger the change after the given delay
+//      // Current state remains as is for now
+//      lightbulb_state.sec_level_target = request->level;
+//      lightbulb_state.temperature_target = temperature;
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_SEC_LEVEL, 1);
+//      // store transition parameter for later use
+//      delayed_sec_level_trans = transition_ms;
+//    } else {
+//      // no delay but transition time has been set.
+//      lightbulb_state.sec_level_target = request->level;
+//      lightbulb_state.temperature_target = temperature;
+//      LEDS_SetTemperature(temperature, lightbulb_state.deltauv_current, transition_ms);
+//
+//      // lightbulb current state will be updated when transition is complete
+//      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_SEC_LEVEL_TRANSITION, 1);
+//    }
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    sec_level_response(element_index, client_addr, appkey_index);
+//  } else {
+//    sec_level_update(element_index);
+//  }
+//}
 
-static void sec_level_request(uint16_t model_id,
-                              uint16_t element_index,
-                              uint16_t client_addr,
-                              uint16_t server_addr,
-                              uint16_t appkey_index,
-                              const struct mesh_generic_request *request,
-                              uint32_t transition_ms,
-                              uint16_t delay_ms,
-                              uint8_t request_flags)
-{
-  // for simplicity, this demo assumes that all level requests use set level.
-  // other type of requests are ignored
+//static void sec_level_change(uint16_t model_id,
+//                             uint16_t element_index,
+//                             const struct mesh_generic_state *current,
+//                             const struct mesh_generic_state *target,
+//                             uint32_t remaining_ms)
+//{
+//  if (lightbulb_state.sec_level_current != current->level.level) {
+//    printf("sec_level_change: from %d to %d\r\n", lightbulb_state.sec_level_current, current->level.level);
+//    lightbulb_state.sec_level_current = current->level.level;
+//    lightbulb_state_changed();
+//  } else {
+//    printf("sec_level update -same value (%d)\r\n", lightbulb_state.sec_level_current);
+//  }
+//}
+//
+//static errorcode_t power_onoff_response(uint16_t element_index,
+//                                        uint16_t client_addr,
+//                                        uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current;
+//  current.kind = mesh_generic_state_on_power_up;
+//  current.on_power_up.on_power_up = lightbulb_state.onpowerup;
+//
+//  return mesh_lib_generic_server_response(MESH_GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          NULL,
+//                                          0,
+//                                          0x00);
+//}
+//
+//static errorcode_t power_onoff_update(uint16_t element_index)
+//{
+//  struct mesh_generic_state current;
+//  current.kind = mesh_generic_state_on_power_up;
+//  current.on_power_up.on_power_up = lightbulb_state.onpowerup;
+//
+//  return mesh_lib_generic_server_update(MESH_GENERIC_POWER_ON_OFF_SERVER_MODEL_ID,
+//                                        element_index,
+//                                        &current,
+//                                        NULL,
+//                                        0);
+//}
 
-  uint16_t temperature;
+//static errorcode_t power_onoff_update_and_publish(uint16_t element_index)
+//{
+//  errorcode_t e;
+//
+//  e = power_onoff_update(element_index);
+//  if (e == bg_err_success) {
+//    e = mesh_lib_generic_server_publish(MESH_GENERIC_POWER_ON_OFF_SERVER_MODEL_ID,
+//                                        element_index,
+//                                        mesh_generic_state_on_power_up);
+//  }
+//
+//  return e;
+//}
+////
+////static void power_onoff_request(uint16_t model_id,
+//                                uint16_t element_index,
+//                                uint16_t client_addr,
+//                                uint16_t server_addr,
+//                                uint16_t appkey_index,
+//                                const struct mesh_generic_request *request,
+//                                uint32_t transition_ms,
+//                                uint16_t delay_ms,
+//                                uint8_t request_flags)
+//{
+//	return;
+//  printf("ON POWER UP request received; state=<%s>\n",
+//         lightbulb_state.onpowerup == 0 ? "OFF"
+//         : lightbulb_state.onpowerup == 1 ? "ON"
+//         : "RESTORE");
+//
+//  if (lightbulb_state.onpowerup == request->on_power_up) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Setting onpowerup to <%s>\n",
+//           request->on_power_up == 0 ? "OFF"
+//           : request->on_power_up == 1 ? "ON"
+//           : "RESTORE");
+//    lightbulb_state.onpowerup = request->on_power_up;
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    power_onoff_response(element_index, client_addr, appkey_index);
+//  } else {
+//    power_onoff_update(element_index);
+//  }
+//}
 
-  if (request->kind != mesh_generic_request_level) {
-    return;
-  }
+//static void power_onoff_change(uint16_t model_id,
+//                               uint16_t element_index,
+//                               const struct mesh_generic_state *current,
+//                               const struct mesh_generic_state *target,
+//                               uint32_t remaining_ms)
+//{
+//  // TODO
+//}
+////
+//static errorcode_t transtime_response(uint16_t element_index,
+//                                      uint16_t client_addr,
+//                                      uint16_t appkey_index)
+//{
+//  struct mesh_generic_state current;
+//  current.kind = mesh_generic_state_transition_time;
+//  current.transition_time.time = lightbulb_state.transtime;
+//
+//  return mesh_lib_generic_server_response(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
+//                                          element_index,
+//                                          client_addr,
+//                                          appkey_index,
+//                                          &current,
+//                                          NULL,
+//                                          0,
+//                                          0x00);
+//}
+//
+//static errorcode_t transtime_update(uint16_t element_index)
+//{
+//  struct mesh_generic_state current;
+//  current.kind = mesh_generic_state_transition_time;
+//  current.transition_time.time = lightbulb_state.transtime;
+//
+//  return mesh_lib_generic_server_update(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
+//                                        element_index,
+//                                        &current,
+//                                        NULL,
+//                                        0);
+//}
 
-  printf("sec_level_request: level=%d, transition=%lu, delay=%u\r\n",
-         request->level, transition_ms, delay_ms);
+//static void transtime_request(uint16_t model_id,
+//                              uint16_t element_index,
+//                              uint16_t client_addr,
+//                              uint16_t server_addr,
+//                              uint16_t appkey_index,
+//                              const struct mesh_generic_request *request,
+//                              uint32_t transition_ms,
+//                              uint16_t delay_ms,
+//                              uint8_t request_flags)
+//{
+//	return;
+//  printf("TRANSTIME request received; state=<0x%x>\n",
+//         lightbulb_state.transtime);
+//
+//  if (lightbulb_state.transtime == request->transition_time) {
+//    printf("Request for current state received; no op\n");
+//  } else {
+//    printf("Setting transtime to <0x%x>\n", request->transition_time);
+//    lightbulb_state.transtime = request->transition_time;
+//    lightbulb_state_changed();
+//  }
+//
+//  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
+//    transtime_response(element_index, client_addr, appkey_index);
+//  } else {
+//    transtime_update(element_index);
+//  }
+//}
 
-  if (lightbulb_state.sec_level_current == request->level) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Setting sec_level to <%d>\r\n", request->level);
-
-    temperature = lightbulb_state.temperature_min                                       \
-                  + (uint32_t)(request->level + (int32_t)32768)                         \
-                  * (lightbulb_state.temperature_max - lightbulb_state.temperature_min) \
-                  / 65535;
-
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.sec_level_current = request->level;
-      lightbulb_state.sec_level_target = request->level;
-      lightbulb_state.temperature_current = temperature;
-      lightbulb_state.temperature_target = temperature;
-
-      // update LED Temperature
-      LEDS_SetTemperature(temperature, lightbulb_state.deltauv_current, 0);
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the light change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.sec_level_target = request->level;
-      lightbulb_state.temperature_target = temperature;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_SEC_LEVEL, 1);
-      // store transition parameter for later use
-      delayed_sec_level_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.sec_level_target = request->level;
-      lightbulb_state.temperature_target = temperature;
-      LEDS_SetTemperature(temperature, lightbulb_state.deltauv_current, transition_ms);
-
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_SEC_LEVEL_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    sec_level_response(element_index, client_addr, appkey_index);
-  } else {
-    sec_level_update(element_index);
-  }
-}
-
-static void sec_level_change(uint16_t model_id,
-                             uint16_t element_index,
-                             const struct mesh_generic_state *current,
-                             const struct mesh_generic_state *target,
-                             uint32_t remaining_ms)
-{
-  if (lightbulb_state.sec_level_current != current->level.level) {
-    printf("sec_level_change: from %d to %d\r\n", lightbulb_state.sec_level_current, current->level.level);
-    lightbulb_state.sec_level_current = current->level.level;
-    lightbulb_state_changed();
-  } else {
-    printf("sec_level update -same value (%d)\r\n", lightbulb_state.sec_level_current);
-  }
-}
-
-static errorcode_t power_onoff_response(uint16_t element_index,
-                                        uint16_t client_addr,
-                                        uint16_t appkey_index)
-{
-  struct mesh_generic_state current;
-  current.kind = mesh_generic_state_on_power_up;
-  current.on_power_up.on_power_up = lightbulb_state.onpowerup;
-
-  return mesh_lib_generic_server_response(MESH_GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          NULL,
-                                          0,
-                                          0x00);
-}
-
-static errorcode_t power_onoff_update(uint16_t element_index)
-{
-  struct mesh_generic_state current;
-  current.kind = mesh_generic_state_on_power_up;
-  current.on_power_up.on_power_up = lightbulb_state.onpowerup;
-
-  return mesh_lib_generic_server_update(MESH_GENERIC_POWER_ON_OFF_SERVER_MODEL_ID,
-                                        element_index,
-                                        &current,
-                                        NULL,
-                                        0);
-}
-
-static errorcode_t power_onoff_update_and_publish(uint16_t element_index)
-{
-  errorcode_t e;
-
-  e = power_onoff_update(element_index);
-  if (e == bg_err_success) {
-    e = mesh_lib_generic_server_publish(MESH_GENERIC_POWER_ON_OFF_SERVER_MODEL_ID,
-                                        element_index,
-                                        mesh_generic_state_on_power_up);
-  }
-
-  return e;
-}
-
-static void power_onoff_request(uint16_t model_id,
-                                uint16_t element_index,
-                                uint16_t client_addr,
-                                uint16_t server_addr,
-                                uint16_t appkey_index,
-                                const struct mesh_generic_request *request,
-                                uint32_t transition_ms,
-                                uint16_t delay_ms,
-                                uint8_t request_flags)
-{
-	return;
-  printf("ON POWER UP request received; state=<%s>\n",
-         lightbulb_state.onpowerup == 0 ? "OFF"
-         : lightbulb_state.onpowerup == 1 ? "ON"
-         : "RESTORE");
-
-  if (lightbulb_state.onpowerup == request->on_power_up) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Setting onpowerup to <%s>\n",
-           request->on_power_up == 0 ? "OFF"
-           : request->on_power_up == 1 ? "ON"
-           : "RESTORE");
-    lightbulb_state.onpowerup = request->on_power_up;
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    power_onoff_response(element_index, client_addr, appkey_index);
-  } else {
-    power_onoff_update(element_index);
-  }
-}
-
-static void power_onoff_change(uint16_t model_id,
-                               uint16_t element_index,
-                               const struct mesh_generic_state *current,
-                               const struct mesh_generic_state *target,
-                               uint32_t remaining_ms)
-{
-  // TODO
-}
-
-static errorcode_t transtime_response(uint16_t element_index,
-                                      uint16_t client_addr,
-                                      uint16_t appkey_index)
-{
-  struct mesh_generic_state current;
-  current.kind = mesh_generic_state_transition_time;
-  current.transition_time.time = lightbulb_state.transtime;
-
-  return mesh_lib_generic_server_response(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
-                                          element_index,
-                                          client_addr,
-                                          appkey_index,
-                                          &current,
-                                          NULL,
-                                          0,
-                                          0x00);
-}
-
-static errorcode_t transtime_update(uint16_t element_index)
-{
-  struct mesh_generic_state current;
-  current.kind = mesh_generic_state_transition_time;
-  current.transition_time.time = lightbulb_state.transtime;
-
-  return mesh_lib_generic_server_update(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
-                                        element_index,
-                                        &current,
-                                        NULL,
-                                        0);
-}
-
-static void transtime_request(uint16_t model_id,
-                              uint16_t element_index,
-                              uint16_t client_addr,
-                              uint16_t server_addr,
-                              uint16_t appkey_index,
-                              const struct mesh_generic_request *request,
-                              uint32_t transition_ms,
-                              uint16_t delay_ms,
-                              uint8_t request_flags)
-{
-	return;
-  printf("TRANSTIME request received; state=<0x%x>\n",
-         lightbulb_state.transtime);
-
-  if (lightbulb_state.transtime == request->transition_time) {
-    printf("Request for current state received; no op\n");
-  } else {
-    printf("Setting transtime to <0x%x>\n", request->transition_time);
-    lightbulb_state.transtime = request->transition_time;
-    lightbulb_state_changed();
-  }
-
-  if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    transtime_response(element_index, client_addr, appkey_index);
-  } else {
-    transtime_update(element_index);
-  }
-}
-
-static void transtime_change(uint16_t model_id,
-                             uint16_t element_index,
-                             const struct mesh_generic_state *current,
-                             const struct mesh_generic_state *target,
-                             uint32_t remaining_ms)
-{
-  // TODO
-}
+//static void transtime_change(uint16_t model_id,
+//                             uint16_t element_index,
+//                             const struct mesh_generic_state *current,
+//                             const struct mesh_generic_state *target,
+//                             uint32_t remaining_ms)
+//{
+//  // TODO
+//}
 
 /**
  * This function loads the saved light state from Persistent Storage and
  * copies the data in the global variable lightbulb_state
  */
-static int lightbulb_state_load(void)
-{
-  struct gecko_msg_flash_ps_load_rsp_t* pLoad;
-
-  pLoad = gecko_cmd_flash_ps_load(0x4004);
-
-  if (pLoad->result) {
-    memset(&lightbulb_state, 0, sizeof(struct lightbulb_state));
-    lightbulb_state.lightness_last = 0xFFFF;
-    lightbulb_state.temperature_default = DEFAULT_TEMPERATURE;
-    lightbulb_state.temperature_min = MIN_TEMPERATURE;
-    lightbulb_state.temperature_max = MAX_TEMPERATURE;
-    lightbulb_state.deltauv_default = DEFAULT_DELTAUV;
-    return -1;
-  }
-
-  memcpy(&lightbulb_state, pLoad->value.data, pLoad->value.len);
-
-  return 0;
-}
-
+//static int lightbulb_state_load(void)
+//{
+//  struct gecko_msg_flash_ps_load_rsp_t* pLoad;
+//
+//  pLoad = gecko_cmd_flash_ps_load(0x4004);
+//
+//  if (pLoad->result) {
+//    memset(&lightbulb_state, 0, sizeof(struct lightbulb_state));
+//    lightbulb_state.lightness_last = 0xFFFF;
+//    lightbulb_state.temperature_default = DEFAULT_TEMPERATURE;
+//    lightbulb_state.temperature_min = MIN_TEMPERATURE;
+//    lightbulb_state.temperature_max = MAX_TEMPERATURE;
+//    lightbulb_state.deltauv_default = DEFAULT_DELTAUV;
+//    return -1;
+//  }
+//
+//  memcpy(&lightbulb_state, pLoad->value.data, pLoad->value.len);
+//
+//  return 0;
+//}
+//
 /**
  * this function saves the current light state in Persistent Storage so that
  * the data is preserved over reboots and power cycles. The light state is hold
@@ -1472,37 +1472,37 @@ static void init_models(void)
                                            0,
                                            onoff_request,
                                            onoff_change);
-  mesh_lib_generic_server_register_handler(MESH_GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID,
-                                           0,
-                                           power_onoff_request,
-                                           power_onoff_change);
-  mesh_lib_generic_server_register_handler(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
-                                           0,
-                                           transtime_request,
-                                           transtime_change);
+//  mesh_lib_generic_server_register_handler(MESH_GENERIC_POWER_ON_OFF_SETUP_SERVER_MODEL_ID,
+//                                           0,
+//                                           power_onoff_request,
+//                                           power_onoff_change);
+//  mesh_lib_generic_server_register_handler(MESH_GENERIC_TRANSITION_TIME_SERVER_MODEL_ID,
+//                                           0,
+//                                           transtime_request,
+//                                           transtime_change);
 
-  mesh_lib_generic_server_register_handler(MESH_LIGHTING_LIGHTNESS_SERVER_MODEL_ID,
-                                           0,
-                                           lightness_request,
-                                           lightness_change);
-  mesh_lib_generic_server_register_handler(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
-                                           0,
-                                           pri_level_request,
-                                           pri_level_change);
+//  mesh_lib_generic_server_register_handler(MESH_LIGHTING_LIGHTNESS_SERVER_MODEL_ID,
+//                                           0,
+//                                           lightness_request,
+//                                           lightness_change);
+//  mesh_lib_generic_server_register_handler(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
+//                                           0,
+//                                           pri_level_request,
+//                                           pri_level_change);
   mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
                                            0,
                                            ctl_request,
                                            ctl_change);
-  mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_SETUP_SERVER_MODEL_ID,
-                                           0,
-                                           ctl_setup_request,
-                                           ctl_setup_change);
+//  mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_SETUP_SERVER_MODEL_ID,
+//                                           0,
+//                                           ctl_setup_request,
+//                                           ctl_setup_change);
 
 
-  mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
-                                           1,
-                                           ctl_temperature_request,
-                                           ctl_temperature_change);
+//  mesh_lib_generic_server_register_handler(MESH_LIGHTING_CTL_TEMPERATURE_SERVER_MODEL_ID,
+//                                           1,
+//                                           ctl_temperature_request,
+//                                           ctl_temperature_change);
 
   // uncomment following lines to enable generic level server on secondary element
   //mesh_lib_generic_server_register_handler(MESH_GENERIC_LEVEL_SERVER_MODEL_ID,
@@ -1624,12 +1624,12 @@ void set_device_name(bd_addr *pAddr)
   uint16 res;
 
   // create unique device name using the last two bytes of the Bluetooth address
-  sprintf(name, "light node %x:%x", pAddr->addr[1], pAddr->addr[0]);
+  sprintf(name, "SENSOR NODE %x:%x", pAddr->addr[1], pAddr->addr[0]);
 
   memcpy(myBTAddr.addr,pAddr->addr, 6);
-  printf("MY BT Addr %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
+  printf("SENSOR NODE BT ADDRESS %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
 
-  printf("Device name: '%s'\r\n", name);
+  printf("Device name on Mesh Application: '%s'\r\n", name);
 
   res = gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, strlen(name), (uint8 *)name)->result;
   if (res) {
@@ -1880,18 +1880,18 @@ void delayed_sec_level_request()
     gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delayed_sec_level_trans), TIMER_ID_SEC_LEVEL_TRANSITION, 1);
   }
 }
-
-static void server_state_changed(struct gecko_msg_mesh_generic_server_state_changed_evt_t *pEvt)
-{
-  int i;
-
-  printf("state changed: ");
-  printf("model ID %4.4x, type %2.2x ", pEvt->model_id, pEvt->type);
-  for (i = 0; i < pEvt->parameters.len; i++) {
-    printf("%2.2x ", pEvt->parameters.data[i]);
-  }
-  printf("\r\n");
-}
+//
+//static void server_state_changed(struct gecko_msg_mesh_generic_server_state_changed_evt_t *pEvt)
+//{
+//  int i;
+//
+//  printf("state changed: ");
+//  printf("model ID %4.4x, type %2.2x ", pEvt->model_id, pEvt->type);
+//  for (i = 0; i < pEvt->parameters.len; i++) {
+//    printf("%2.2x ", pEvt->parameters.data[i]);
+//  }
+//  printf("\r\n");
+//}
 
 /**
  *  this function is called to initiate factory reset. Factory reset may be initiated

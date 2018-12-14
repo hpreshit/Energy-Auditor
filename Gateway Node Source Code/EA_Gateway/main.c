@@ -133,20 +133,20 @@ uint8_t boot_to_dfu = 0;
 /** global variables */
 static uint16 _elem_index = 0xffff; /* For indexing elements of the node (this example has only one element) */
 static uint16 _my_address = 0;    /* Address of the Primary Element of the Node */
-static uint8 switch_pos = 0;      /* current position of the switch  */
+//static uint8 switch_pos = 0;      /* current position of the switch  */
 static uint8 request_count;       /* number of on/off requests to be sent */
 static uint8 trid = 0;        /* transaction identifier */
 static uint8 num_connections = 0;     /* number of active Bluetooth connections */
 static uint8 conn_handle = 0xFF;      /* handle of the last opened LE connection */
 
-static uint8 lightness_percent = 0; /* lightness level percentage */
-static uint16 lightness_level = 0;  /* lightness level converted from percentage to actual value, range 0..65535*/
-static uint8 temperature_percent = 50;
-static uint16 temperature_level = 0;
+//static uint8 lightness_percent = 0; /* lightness level percentage */
+//static uint16 lightness_level = 0;  /* lightness level converted from percentage to actual value, range 0..65535*/
+//static uint8 temperature_percent = 50;
+//static uint16 temperature_level = 0;
 
 /* button press timestamps for long/short press detection */
 static uint32 pb0_press;
-static uint32 pb1_press;
+//static uint32 pb1_press;
 
 #define LONG_PRESS_TIME_TICKS   (32768 / 4)
 
@@ -230,33 +230,13 @@ void gpioint(uint8_t pin)
     if (GPIO_PinInGet(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN) == 0) {
       // PB0 pressed - record RTCC timestamp
       pb0_press = RTCC_CounterGet();
-      printf("Time press:%lu\r\n",pb0_press);
+//      printf("Time press:%lu\r\n",pb0_press);
     } else {
       // PB0 released - check if it was short or long press
       t_diff = RTCC_CounterGet() - pb0_press;
-      printf("Time press diff:%lu (%d)\r\n", t_diff, VERY_LONG_PRESS_TIME_TICKS);
-//      if (t_diff < LONG_PRESS_TIME_TICKS) {
-//        gecko_external_signal(EXT_SIGNAL_PB0_SHORT_PRESS);
-//      } else if (t_diff < VERY_LONG_PRESS_TIME_TICKS) {
-//        gecko_external_signal(EXT_SIGNAL_PB0_LONG_PRESS);
-//      } else {
+//      printf("Time press diff:%lu (%d)\r\n", t_diff, VERY_LONG_PRESS_TIME_TICKS);
       if(t_diff >= VERY_LONG_PRESS_TIME_TICKS){
         gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
-      }
-    }
-  } else if (pin == BSP_BUTTON1_PIN) {
-    if (GPIO_PinInGet(BSP_BUTTON1_PORT, BSP_BUTTON1_PIN) == 0) {
-      // PB1 pressed - record RTCC timestamp
-      pb1_press = RTCC_CounterGet();
-    } else {
-      // PB1 released - check if it was short or long press
-      t_diff = RTCC_CounterGet() - pb1_press;
-      if (t_diff < LONG_PRESS_TIME_TICKS) {
-        gecko_external_signal(EXT_SIGNAL_PB1_SHORT_PRESS);
-      } else if (t_diff < VERY_LONG_PRESS_TIME_TICKS) {
-        gecko_external_signal(EXT_SIGNAL_PB1_LONG_PRESS);
-      } else {
-        gecko_external_signal(EXT_SIGNAL_PB1_VERY_LONG_PRESS);
       }
     }
   }
@@ -276,8 +256,104 @@ void enable_button_interrupts(void)
 
   /* register the callback function that is invoked when interrupt occurs */
   GPIOINT_CallbackRegister(BSP_BUTTON0_PIN, gpioint);
-  GPIOINT_CallbackRegister(BSP_BUTTON1_PIN, gpioint);
+//  GPIOINT_CallbackRegister(BSP_BUTTON1_PIN, gpioint);
 }
+
+
+
+
+/**
+ * This function publishes one on/off request to change the state of light(s) in the group.
+ * Global variable switch_pos holds the latest desired light state, possible values are
+ * switch_pos = 1 -> PB1 was pressed, turn lights on
+ * switch_pos = 0 -> PB0 was pressed, turn lights off
+ *
+ * This application sends multiple requests for each button press to improve reliability.
+ * Parameter retrans indicates whether this is the first request or a re-transmission.
+ * The transaction ID is not incremented in case of a re-transmission.
+ */
+//void send_onoff_request(int retrans)
+//{
+//  uint16 resp;
+//  uint16 delay;
+//  struct mesh_generic_request req;
+//  const uint32 transtime = 0; /* using zero transition time by default */
+//
+//  req.kind = mesh_generic_request_on_off;
+//  req.on_off = switch_pos ? MESH_GENERIC_ON_OFF_STATE_ON : MESH_GENERIC_ON_OFF_STATE_OFF;
+//
+//  // increment transaction ID for each request, unless it's a retransmission
+//  if (retrans == 0) {
+//    trid++;
+//  }
+//
+//  /* delay for the request is calculated so that the last request will have a zero delay and each
+//   * of the previous request have delay that increases in 50 ms steps. For example, when using three
+//   * on/off requests per button press the delays are set as 100, 50, 0 ms
+//   */
+//  delay = (request_count - 1) * 50;
+//
+//  resp = gecko_cmd_mesh_generic_client_publish(
+//    MESH_GENERIC_ON_OFF_CLIENT_MODEL_ID,
+//    _elem_index,
+//    trid,
+//    transtime,   // transition time in ms
+//    delay,
+//    0,     // flags
+//    mesh_generic_request_on_off,     // type
+//    1,     // param len
+//    &req.on_off     /// parameters data
+//    )->result;
+//
+//  if (resp) {
+//    printf("gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
+//  } else {
+//    printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
+//  }
+//
+//  /* keep track of how many requests has been sent */
+//  if (request_count > 0) {
+//    request_count--;
+//  }
+//}
+//
+//void send_lightness_request(int retrans)
+//{
+//  uint16 resp;
+//  uint16 delay;
+//  struct mesh_generic_request req;
+//
+//  req.kind = mesh_lighting_request_lightness_actual;
+//  req.lightness = lightness_level;
+//
+//  // increment transaction ID for each request, unless it's a retransmission
+//  if (retrans == 0) {
+//    trid++;
+//  }
+//
+//  delay = 0;
+//
+//  resp = gecko_cmd_mesh_generic_client_publish(
+//    MESH_LIGHTING_LIGHTNESS_CLIENT_MODEL_ID,
+//    _elem_index,
+//    trid,
+//    0,     // transition
+//    delay,
+//    0,     // flags
+//    mesh_lighting_request_lightness_actual, // type
+//    2,     // param len
+//    (uint8*)&req.lightness   /// parameters data
+//    //&req.lightness     /// parameters data
+//    )->result;
+//
+//  if (resp) {
+//    printf("gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
+//  } else {
+//    printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
+//  }
+//}
+//void send_ctl_request(int retrans){
+//}
 
 void publish_SamplingRequest(int retrans, bool startSampling){
 
@@ -324,100 +400,6 @@ void publish_SamplingRequest(int retrans, bool startSampling){
 	}
 }
 
-
-/**
- * This function publishes one on/off request to change the state of light(s) in the group.
- * Global variable switch_pos holds the latest desired light state, possible values are
- * switch_pos = 1 -> PB1 was pressed, turn lights on
- * switch_pos = 0 -> PB0 was pressed, turn lights off
- *
- * This application sends multiple requests for each button press to improve reliability.
- * Parameter retrans indicates whether this is the first request or a re-transmission.
- * The transaction ID is not incremented in case of a re-transmission.
- */
-void send_onoff_request(int retrans)
-{
-  uint16 resp;
-  uint16 delay;
-  struct mesh_generic_request req;
-  const uint32 transtime = 0; /* using zero transition time by default */
-
-  req.kind = mesh_generic_request_on_off;
-  req.on_off = switch_pos ? MESH_GENERIC_ON_OFF_STATE_ON : MESH_GENERIC_ON_OFF_STATE_OFF;
-
-  // increment transaction ID for each request, unless it's a retransmission
-  if (retrans == 0) {
-    trid++;
-  }
-
-  /* delay for the request is calculated so that the last request will have a zero delay and each
-   * of the previous request have delay that increases in 50 ms steps. For example, when using three
-   * on/off requests per button press the delays are set as 100, 50, 0 ms
-   */
-  delay = (request_count - 1) * 50;
-
-  resp = gecko_cmd_mesh_generic_client_publish(
-    MESH_GENERIC_ON_OFF_CLIENT_MODEL_ID,
-    _elem_index,
-    trid,
-    transtime,   // transition time in ms
-    delay,
-    0,     // flags
-    mesh_generic_request_on_off,     // type
-    1,     // param len
-    &req.on_off     /// parameters data
-    )->result;
-
-  if (resp) {
-    printf("gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
-  } else {
-    printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
-  }
-
-  /* keep track of how many requests has been sent */
-  if (request_count > 0) {
-    request_count--;
-  }
-}
-
-void send_lightness_request(int retrans)
-{
-  uint16 resp;
-  uint16 delay;
-  struct mesh_generic_request req;
-
-  req.kind = mesh_lighting_request_lightness_actual;
-  req.lightness = lightness_level;
-
-  // increment transaction ID for each request, unless it's a retransmission
-  if (retrans == 0) {
-    trid++;
-  }
-
-  delay = 0;
-
-  resp = gecko_cmd_mesh_generic_client_publish(
-    MESH_LIGHTING_LIGHTNESS_CLIENT_MODEL_ID,
-    _elem_index,
-    trid,
-    0,     // transition
-    delay,
-    0,     // flags
-    mesh_lighting_request_lightness_actual, // type
-    2,     // param len
-    (uint8*)&req.lightness   /// parameters data
-    //&req.lightness     /// parameters data
-    )->result;
-
-  if (resp) {
-    printf("gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
-  } else {
-    printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
-  }
-}
-void send_ctl_request(int retrans){
-
-}
 void publishEpochTime(int retrans)
 {
   uint16 resp;
@@ -489,114 +471,114 @@ void publishEpochTime(int retrans)
  *
  * This function is called from application context (not ISR) so it is safe to call BGAPI functions
  */
-void handle_button_press(int button)
-{
-  /* short press adjusts light brightness, using Light Lightness model */
-  if (button == 1) {
-    lightness_percent += 10;
-    if (lightness_percent > 100) {
-      lightness_percent = 100;
-    }
-  } else {
-    if (lightness_percent >= 10) {
-      lightness_percent -= 10;
-    }
-  }
-
-  lightness_level = lightness_percent * 0xFFFF / 100;
-  printf("set light to %d %% / level %d\r\n", lightness_percent, lightness_level);
-
-  /* send the request (lightness request is sent only once in this example) */
-  send_lightness_request(0);
-}
-
-void handle_long_press(int button)
-{
-  /* short press adjusts light brightness, using Light Lightness model */
-  if (button == 1) {
-    temperature_percent += 10;
-    if (temperature_percent > 100) {
-      temperature_percent = 100;
-    }
-  } else {
-    if (temperature_percent >= 10) {
-      temperature_percent -= 10;
-    }
-  }
-
-  /* using square of percentage to change temperature more uniformly */
-  temperature_level = TEMPERATURE_MIN + (temperature_percent * temperature_percent / 100) * (TEMPERATURE_MAX - TEMPERATURE_MIN) / 100;
-  printf("set temperature to %d %% / level %d K\r\n", temperature_percent * temperature_percent / 100, temperature_level);
-
-  /* send the request (ctl request is sent only once in this example) */
-  send_ctl_request(0);
-}
-
-/**
- * Handling of long button presses. This function called from the main loop when application receives
- * event gecko_evt_system_external_signal_id.
- *
- * parameter button defines which button was pressed, possible values
- * are 0 = PB0, 1 = PB1.
- *
- * This function is called from application context (not ISR) so it is safe to call BGAPI functions
- */
-void handle_very_long_press(int button)
-{
-  // PB0 -> switch off, PB1 -> switch on
-  switch_pos = button;
-
-  /* long press turns light ON or OFF, using Generic OnOff model */
-  printf("PB%d -> turn light(s) ", button);
-  if (switch_pos) {
-    printf("on\r\n");
-    lightness_percent = 100;
-  } else {
-    printf("off\r\n");
-    lightness_percent = 0;
-  }
-
-  request_count = 3; // request is sent 3 times to improve reliability
-
-  /* send the first request */
-  send_onoff_request(0);
-
-  /* start a repeating soft timer to trigger re-transmission of the request after 50 ms delay */
-  gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(50), TIMER_ID_RETRANS, 0);
-}
+//void handle_button_press(int button)
+//{
+//  /* short press adjusts light brightness, using Light Lightness model */
+//  if (button == 1) {
+//    lightness_percent += 10;
+//    if (lightness_percent > 100) {
+//      lightness_percent = 100;
+//    }
+//  } else {
+//    if (lightness_percent >= 10) {
+//      lightness_percent -= 10;
+//    }
+//  }
+//
+//  lightness_level = lightness_percent * 0xFFFF / 100;
+//  printf("set light to %d %% / level %d\r\n", lightness_percent, lightness_level);
+//
+//  /* send the request (lightness request is sent only once in this example) */
+//  send_lightness_request(0);
+//}
+//
+//void handle_long_press(int button)
+//{
+//  /* short press adjusts light brightness, using Light Lightness model */
+//  if (button == 1) {
+//    temperature_percent += 10;
+//    if (temperature_percent > 100) {
+//      temperature_percent = 100;
+//    }
+//  } else {
+//    if (temperature_percent >= 10) {
+//      temperature_percent -= 10;
+//    }
+//  }
+//
+//  /* using square of percentage to change temperature more uniformly */
+//  temperature_level = TEMPERATURE_MIN + (temperature_percent * temperature_percent / 100) * (TEMPERATURE_MAX - TEMPERATURE_MIN) / 100;
+//  printf("set temperature to %d %% / level %d K\r\n", temperature_percent * temperature_percent / 100, temperature_level);
+//
+//  /* send the request (ctl request is sent only once in this example) */
+//  send_ctl_request(0);
+//}
+//
+///**
+// * Handling of long button presses. This function called from the main loop when application receives
+// * event gecko_evt_system_external_signal_id.
+// *
+// * parameter button defines which button was pressed, possible values
+// * are 0 = PB0, 1 = PB1.
+// *
+// * This function is called from application context (not ISR) so it is safe to call BGAPI functions
+// */
+//void handle_very_long_press(int button)
+//{
+//  // PB0 -> switch off, PB1 -> switch on
+//  switch_pos = button;
+//
+//  /* long press turns light ON or OFF, using Generic OnOff model */
+//  printf("PB%d -> turn light(s) ", button);
+//  if (switch_pos) {
+//    printf("on\r\n");
+//    lightness_percent = 100;
+//  } else {
+//    printf("off\r\n");
+//    lightness_percent = 0;
+//  }
+//
+//  request_count = 3; // request is sent 3 times to improve reliability
+//
+//  /* send the first request */
+//  send_onoff_request(0);
+//
+//  /* start a repeating soft timer to trigger re-transmission of the request after 50 ms delay */
+//  gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(50), TIMER_ID_RETRANS, 0);
+//}
 
 /**
  * Initialize LPN functionality with configuration and friendship establishment.
  */
-void lpn_init(void)
-{
-  uint16 res;
-  // Initialize LPN functionality.
-  res = gecko_cmd_mesh_lpn_init()->result;
-  if (res) {
-    printf("LPN init failed (0x%x)\r\n", res);
-    return;
-  }
-
-  res = gecko_cmd_mesh_lpn_configure(2, 5 * 1000)->result;
-  if (res) {
-    printf("LPN conf failed (0x%x)\r\n", res);
-    return;
-  }
-
-  printf("trying to find friend...\r\n");
-  res = gecko_cmd_mesh_lpn_establish_friendship(0)->result;
-
-  if (res != 0) {
-    printf("ret.code %x\r\n", res);
-  }
-}
+//void lpn_init(void)
+//{
+//  uint16 res;
+//  // Initialize LPN functionality.
+//  res = gecko_cmd_mesh_lpn_init()->result;
+//  if (res) {
+//    printf("LPN init failed (0x%x)\r\n", res);
+//    return;
+//  }
+//
+//  res = gecko_cmd_mesh_lpn_configure(2, 5 * 1000)->result;
+//  if (res) {
+//    printf("LPN conf failed (0x%x)\r\n", res);
+//    return;
+//  }
+//
+//  printf("trying to find friend...\r\n");
+//  res = gecko_cmd_mesh_lpn_establish_friendship(0)->result;
+//
+//  if (res != 0) {
+//    printf("ret.code %x\r\n", res);
+//  }
+//}
 
 /**
  * Switch node initialization. This is called at each boot if provisioning is already done.
  * Otherwise this function is called after provisioning is completed.
  */
-void switch_node_init(void)
+void gateway_node_init(void)
 {
   mesh_lib_init(malloc, free, 8);
 
@@ -637,11 +619,12 @@ void set_device_name(bd_addr *pAddr)
   uint16 res;
 
   // create unique device name using the last two bytes of the Bluetooth address
-  sprintf(name, "switch node %x:%x", pAddr->addr[1], pAddr->addr[0]);
-  memcpy(myBTAddr.addr,pAddr->addr, 6);
-  printf("MY BT Addr %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
+  sprintf(name, "Gateway node %x:%x", pAddr->addr[1], pAddr->addr[0]);
 
-  printf("Device name: '%s'\r\n", name);
+  memcpy(myBTAddr.addr,pAddr->addr, 6);
+  printf("GATEWAY BT ADDRESS %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
+
+  printf("Device name on Mesh application: '%s'\r\n", name);
 
   res = gecko_cmd_gatt_server_write_attribute_value(gattdb_device_name, 0, strlen(name), (uint8 *)name)->result;
   if (res) {
@@ -649,7 +632,7 @@ void set_device_name(bd_addr *pAddr)
   }
 
   // show device name on the LCD
-  DI_Print(name, DI_ROW_NAME);
+  //DI_Print(name, DI_ROW_NAME);
 }
 
 /**
@@ -659,8 +642,8 @@ void set_device_name(bd_addr *pAddr)
  */
 void initiate_factory_reset(void)
 {
-  printf("factory reset\r\n");
-  DI_Print("\n***\nFACTORY RESET\n***", DI_ROW_STATUS);
+  printf("\r\n***\r\nFACTORY RESET\r\n***");
+//  DI_Print("", DI_ROW_STATUS);
 
   /* if connection is open then close it before rebooting */
   if (conn_handle != 0xFF) {
@@ -685,6 +668,9 @@ struct sensorNodeDetails{
 	uint32_t epochTime[2];
 	uint16_t currentReading[2];
 }SensorNodes[8] = {0};
+
+#define MAKE_SINDEX(x) (x-2)
+#define WAIT_FOR_LAST_RESPONSE_TIME_MS (500)
 
 uint32_t sensorNodeRegisteredCount = 0;
 
@@ -737,7 +723,7 @@ int main()
   led_init();
   button_init();
 
-  DI_Init();
+//  DI_Init();
 
 #if defined(_SILICON_LABS_32B_SERIES_1_CONFIG_3)
   /* xG13 devices have two RTCCs, one for the stack and another for the application.
@@ -783,7 +769,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         result = gecko_cmd_mesh_node_init()->result;
         if (result) {
           sprintf(buf, "init failed (0x%x)", result);
-          DI_Print(buf, DI_ROW_STATUS);
+          //DI_Print(buf, DI_ROW_STATUS);
         }
       }
       break;
@@ -824,7 +810,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
         case TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE:
         {
-        	printf("No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n");
+        	printf("T: %lu. No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n",RTCC_CounterGet());
         	publish_SamplingRequest(0, true);
         	startApplication = true;
         }
@@ -850,13 +836,13 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         _elem_index = 0;   // index of primary element is zero. This example has only one element.
 
         enable_button_interrupts();
-        switch_node_init();
+        gateway_node_init();
 
-        DI_Print("provisioned", DI_ROW_STATUS);
+        //DI_Print("provisioned", DI_ROW_STATUS);
         publish_SamplingRequest(0, false);
       } else {
         printf("node is unprovisioned\r\n");
-        DI_Print("unprovisioned", DI_ROW_STATUS);
+        //DI_Print("unprovisioned", DI_ROW_STATUS);
 
         printf("starting unprovisioned beaconing...\r\n");
         //gecko_cmd_mesh_node_start_unprov_beaconing(0x3);   // enable ADV and GATT provisioning bearer
@@ -866,34 +852,34 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_system_external_signal_id:
     {
-      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_SHORT_PRESS) {
-//        handle_button_press(0);
-      }
-
-      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_SHORT_PRESS) {
-//        handle_button_press(1);
-      }
-      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_LONG_PRESS) {
-//        handle_long_press(0);
-      }
-      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_LONG_PRESS) {
-//        handle_long_press(1);
-      }
+//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_SHORT_PRESS) {
+////        handle_button_press(0);
+//      }
+//
+//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_SHORT_PRESS) {
+////        handle_button_press(1);
+//      }
+//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_LONG_PRESS) {
+////        handle_long_press(0);
+//      }
+//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_LONG_PRESS) {
+////        handle_long_press(1);
+//      }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_VERY_LONG_PRESS) {
     	  printf("Very long press\r\n");
     	  publishEpochTime(0);
     	  publishedTime = true;
 //        handle_very_long_press(0);
       }
-      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_VERY_LONG_PRESS) {
-//        handle_very_long_press(1);
-      }
+//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_VERY_LONG_PRESS) {
+////        handle_very_long_press(1);
+//      }
     }
     break;
 
     case gecko_evt_mesh_node_provisioning_started_id:
       printf("Started provisioning\r\n");
-      DI_Print("provisioning...", DI_ROW_STATUS);
+      //DI_Print("provisioning...", DI_ROW_STATUS);
 #ifdef FEATURE_LED_BUTTON_ON_SAME_PIN
       led_init(); /* shared GPIO pins used as LED output */
 #endif
@@ -903,12 +889,12 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_node_provisioned_id:
       _elem_index = 0;   // index of primary element is zero. This example has only one element.
-      switch_node_init();
+      gateway_node_init();
       printf("node provisioned, got address=%x\r\n", evt->data.evt_mesh_node_provisioned.address);
       // stop LED blinking when provisioning complete
       gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_PROVISIONING, 0);
       LED_set_state(LED_STATE_OFF);
-      DI_Print("provisioned", DI_ROW_STATUS);
+      //DI_Print("provisioned", DI_ROW_STATUS);
       publish_SamplingRequest(0, false);
 
 #ifdef FEATURE_LED_BUTTON_ON_SAME_PIN
@@ -920,7 +906,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     case gecko_evt_mesh_node_provisioning_failed_id:
       prov_fail_evt = (struct gecko_msg_mesh_node_provisioning_failed_evt_t  *)&(evt->data);
       printf("provisioning failed, code %x\r\n", prov_fail_evt->result);
-      DI_Print("prov failed", DI_ROW_STATUS);
+      //DI_Print("prov failed", DI_ROW_STATUS);
       /* start a one-shot timer that will trigger soft reset after small delay */
       gecko_cmd_hardware_set_soft_timer(2 * 32768, TIMER_ID_RESTART, 1);
       break;
@@ -954,12 +940,12 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     		//assume the setup is done
     		//on the 200ms timer expiry callback, we set a flag called startApplication to true.
     		if(publishedTime && startApplication == false){
-    			uint32_t SIndex = server_addr;
+    			uint32_t SIndex = MAKE_SINDEX(server_addr);
     			if(SIndex > MAX_SENSOR_NODES){
     				printf("[ERROR] Server Index out of Range\r\n");
     				while(1);
     			}
-    			SensorNodes[SIndex].sensorNodeIndex = SIndex;
+    			SensorNodes[SIndex].sensorNodeIndex = SIndex+1;
     			memcpy(&SensorNodes[SIndex].btAddr[0],(uint8_t*)&current.ctl.lightness,2);
     			memcpy(&SensorNodes[SIndex].btAddr[2],(uint8_t*)&target.ctl.lightness,2);
     			SensorNodes[SIndex].epochTime[0] = 0;
@@ -969,11 +955,11 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     			uint8_t *p_addr = (uint8_t*)&SensorNodes[SIndex].btAddr[0];
     			printf("Sensor Node %x:%x:%x:%x Registered\r\n",p_addr[3],p_addr[2],p_addr[1],p_addr[0]);
     			sensorNodeRegisteredCount++;
-    			printf("Node count: %lu\r\n",sensorNodeRegisteredCount);
+    			printf("Node count: %lu. T:%lu\r\n",sensorNodeRegisteredCount,RTCC_CounterGet());
     			//stop the timer, start the timer with 200ms
     			gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
     			//TODO: add the macro for timer tick ms
-    			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(500), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
+    			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(WAIT_FOR_LAST_RESPONSE_TIME_MS), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
     			if (result) {
     				printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
     				while(1);
@@ -981,24 +967,24 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     		}
     		else if(startApplication){
     			static uint32_t nodeResponseCount = 0;
-    			uint32_t SIndex = server_addr;
+    			uint32_t SIndex = MAKE_SINDEX(server_addr);
     			if(SIndex < MAX_SENSOR_NODES){
 
     				if(SensorNodes[SIndex].sensorNodeIndex){
 
-    					printf("Data Response from Sensor Node:%lu\r\n",SIndex);
+    					printf("Sensor Node:%lu {\r\n",SIndex);
     					uint16_t currentValue = current.ctl.lightness;
     					uint32_t epochTime = target.ctl.lightness;
     					//update the previous reading with the stale latest reading
     					//update the stale latest reading with the latest reading
     					SensorNodes[SIndex].currentReading[0] = SensorNodes[SIndex].currentReading[1];
     					SensorNodes[SIndex].currentReading[1] = currentValue;
-    					printf("Current Value: %umA --> %umA\r\n",SensorNodes[SIndex].currentReading[0], SensorNodes[SIndex].currentReading[1]);
+    					printf("Current: %umA --> %umA\r\n",SensorNodes[SIndex].currentReading[0], SensorNodes[SIndex].currentReading[1]);
     					if(hasTarget){
     						SensorNodes[SIndex].epochTime[0] = SensorNodes[SIndex].epochTime[1];
     						SensorNodes[SIndex].epochTime[1] = (RTCC_CounterGet()| epochTime);
-    						printf("Time Offset: %lu\r\n",epochTime);
-    						printf("Abs Time: %lus --> %lus\r\n", SensorNodes[SIndex].epochTime[0], SensorNodes[SIndex].epochTime[1]);
+//    						printf("Time Offset: %lu\r\n",epochTime);
+    						printf("Epoch Timestamp: %lus --> %lus\r\n}\r\n", SensorNodes[SIndex].epochTime[0], SensorNodes[SIndex].epochTime[1]);
     					}
     					else{
     						printf("Should have the target field. Strange....\r\n");
@@ -1011,12 +997,12 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 //    					printf("\r\n");
     				}
     				else{
-    					printf("Sensor Node not registered at startup\r\n");
+    					printf("[ERROR]Sensor Node not registered at startup. 'Restart the Gateway' to recapture all nodes\r\n");
     				}
     				if(nodeResponseCount == sensorNodeRegisteredCount){
     					nodeResponseCount = 0;
-    					printf("Got sampled current data from all node. Push to gateway\r\n");
-    					printf("*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-\r\n");
+    					printf("Data collected from all Sensor Nodes. Pushing to Cloud>>>>>>>>>>>\r\n");
+//    					printf("_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\r\n");
     					//TODO:Set an event or directly call the function to send the data to Cloud
     				}
     			}
@@ -1030,14 +1016,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     break;
 
     case gecko_evt_mesh_generic_server_state_changed_id:
-    	printf("Server state changed id\r\n");
-    	printf("Server Addr: 0x%x. Len:%u\r\n",
-    			evt->data.evt_mesh_generic_client_server_status.server_address,
-				evt->data.evt_mesh_generic_client_server_status.parameters.len);
-    	for(int i = 0; i < evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
-
-    		printf("%x ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
-    	}
+    	printf("evt:server state changed id\r\n");
+//    	printf("Server Addr: 0x%x. Len:%u\r\n",
+//    			evt->data.evt_mesh_generic_client_server_status.server_address,
+//				evt->data.evt_mesh_generic_client_server_status.parameters.len);
+//    	for(int i = 0; i < evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
+//
+//    		printf("%x ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
+//    	}
 
     	break;
 
@@ -1045,10 +1031,10 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       printf("evt:gecko_evt_le_connection_opened_id\r\n");
       num_connections++;
       conn_handle = evt->data.evt_le_connection_opened.connection;
-      DI_Print("connected", DI_ROW_CONNECTION);
+      //DI_Print("connected", DI_ROW_CONNECTION);
       // turn off lpn feature after GATT connection is opened
 //      gecko_cmd_mesh_lpn_deinit();
-//      DI_Print("LPN off", DI_ROW_LPN);
+//      //DI_Print("LPN off", DI_ROW_LPN);
       break;
 
     case gecko_evt_le_connection_closed_id:
@@ -1062,7 +1048,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       conn_handle = 0xFF;
       if (num_connections > 0) {
         if (--num_connections == 0) {
-          DI_Print("", DI_ROW_CONNECTION);
+          //DI_Print("", DI_ROW_CONNECTION);
 
 //          lpn_init();
         }
@@ -1101,15 +1087,12 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_lpn_friendship_established_id:
       printf("friendship established\r\n");
-      DI_Print("LPN - FOUND FRIEND", DI_ROW_LPN);
-      send_ctl_request(0);
-//      send_timeupdate_request(0);
-      printf("--TIME SENT--\r\n");
+      //DI_Print("LPN - FOUND FRIEND", DI_ROW_LPN);
       break;
 
     case gecko_evt_mesh_lpn_friendship_failed_id:
       printf("friendship failed\r\n");
-      DI_Print("no friend", DI_ROW_LPN);
+      //DI_Print("no friend", DI_ROW_LPN);
       // try again in 2 seconds
       result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(2000), TIMER_ID_FRIEND_FIND, 1)->result;
       if (result) {
@@ -1119,7 +1102,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_lpn_friendship_terminated_id:
       printf("friendship terminated\r\n");
-      DI_Print("friend lost", DI_ROW_LPN);
+      //DI_Print("friend lost", DI_ROW_LPN);
       if (num_connections == 0) {
         // try again in 2 seconds
         result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(2000), TIMER_ID_FRIEND_FIND, 1)->result;
