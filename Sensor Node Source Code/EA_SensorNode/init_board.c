@@ -30,13 +30,13 @@ void initBoard(void)
   // Enable clock for CRYOTIMER
   CMU_ClockEnable(cmuClock_CRYOTIMER, true);
   // Enable clock for PRS
-  CMU_ClockEnable(cmuClock_PRS, true);
+//  CMU_ClockEnable(cmuClock_PRS, true);
 #ifdef FEATURE_EXP_HEADER_USART3
   // Enable clock for USART3
   CMU_ClockEnable(cmuClock_USART3, true);
 #else
   // Enable clock for USART0
-  CMU_ClockEnable(cmuClock_USART0, true);
+//  CMU_ClockEnable(cmuClock_USART0, true);
 #endif
   // Enable GPIO clock source
   CMU_ClockEnable(cmuClock_GPIO, true);

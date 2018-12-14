@@ -361,7 +361,7 @@ struct mesh_generic_state {
      #mesh_lighting_state_ctl_temperature_range */
     struct mesh_lighting_ctl_temperature_range_state ctl_temperature_range;
     //gunj
-    struct mesh_time_server_state;
+    struct mesh_time_server_state time;
   };
 };
 

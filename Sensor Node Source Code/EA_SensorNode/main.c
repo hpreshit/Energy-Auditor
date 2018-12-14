@@ -143,6 +143,9 @@ static uint8 num_connections = 0;     /* number of active Bluetooth connections 
 static uint8 conn_handle = 0xFF;      /* handle of the last opened LE connection */
 static uint8 init_done = 0;
 
+//gunj
+bd_addr myBTAddr = {0};
+
 static PACKSTRUCT(struct lightbulb_state {
   // On/Off Server state
   uint8_t onoff_current;
@@ -264,6 +267,16 @@ static void onoff_request(uint16_t model_id,
 {
   printf("ON/OFF request: requested state=<%s>, transition=%lu, delay=%u\r\n",
          request->on_off ? "ON" : "OFF", transition_ms, delay_ms);
+
+  if(request->on_off == true){
+	  printf("Enabling LETIMER sampling\r\n");
+	  letimer_enable();
+  }
+  else{
+	  printf("Disabling LETIMER sampling\r\n");
+	  letimer_disable();
+  }
+  return;
 
   if (lightbulb_state.onoff_current == request->on_off) {
     printf("Request for current state received; no op\n");
@@ -597,14 +610,14 @@ static errorcode_t ctl_response(uint16_t element_index,
   struct mesh_generic_state current, target;
 
   current.kind = mesh_lighting_state_ctl;
-  current.ctl.lightness = lightbulb_state.lightness_current;
-  current.ctl.temperature = lightbulb_state.temperature_current;
-  current.ctl.deltauv = lightbulb_state.deltauv_current;
+  current.ctl.lightness = myBTAddr.addr[0] | (myBTAddr.addr[1] << 8); //put btaddr
+  current.ctl.temperature = 20;
+  current.ctl.deltauv = 1;
 
   target.kind = mesh_lighting_state_ctl;
-  target.ctl.lightness = lightbulb_state.lightness_target;
-  target.ctl.temperature = lightbulb_state.temperature_target;
-  target.ctl.deltauv = lightbulb_state.deltauv_target;
+  target.ctl.lightness = myBTAddr.addr[2] | (myBTAddr.addr[3] << 8); //put btaddr
+  target.ctl.temperature = 65535;
+  target.ctl.deltauv = 2;
 
   return mesh_lib_generic_server_response(MESH_LIGHTING_CTL_SERVER_MODEL_ID,
                                           element_index,
@@ -711,72 +724,21 @@ static void ctl_request(uint16_t model_id,
 	  RTCC_CounterSet(g_epochTime);
 	  l_epochTime = 0;
 	  printf("****Gateway ID: %d, Epoch Time:%lu\r\n", request->ctl.deltauv, g_epochTime);
-	  printf("**Received Time Enabling the LETIMER\r\n");
-	  letimer_enable();
+//	  printf("**Received Time Enabling the LETIMER\r\n");
+//	  letimer_enable();
   }
-  return;
 
-  if ((lightbulb_state.lightness_current == request->ctl.lightness)
-      && (lightbulb_state.temperature_current == request->ctl.temperature)
-      && (lightbulb_state.deltauv_current == request->ctl.deltauv)) {
-    printf("Request for current state received; no op\n");
-  } else {
-    if (lightbulb_state.lightness_current != request->ctl.lightness) {
-      printf("Setting lightness to <%u>\r\n", request->lightness);
-    }
-    if (lightbulb_state.temperature_current != request->ctl.temperature) {
-      printf("Setting temperature to <%u>\r\n", request->ctl.temperature);
-    }
-    if (lightbulb_state.deltauv_current != request->ctl.deltauv) {
-      printf("Setting delta UV to <%d>\r\n", request->ctl.deltauv);
-    }
-    if (transition_ms == 0 && delay_ms == 0) { // Immediate change
-      lightbulb_state.lightness_current = request->ctl.lightness;
-      lightbulb_state.lightness_target = request->ctl.lightness;
-      if (request->lightness != 0) {
-        lightbulb_state.lightness_last = request->ctl.lightness;
-      }
-
-      // update LED PWM duty cycle
-      LEDS_SetLevel(lightbulb_state.lightness_current, 0);
-
-      lightbulb_state.temperature_current = request->ctl.temperature;
-      lightbulb_state.temperature_target = request->ctl.temperature;
-      lightbulb_state.deltauv_current = request->ctl.deltauv;
-      lightbulb_state.deltauv_target = request->ctl.deltauv;
-
-      // update LED color temperature
-      LEDS_SetTemperature(lightbulb_state.temperature_current, lightbulb_state.deltauv_current, 0);
-    } else if (delay_ms > 0) {
-      // a delay has been specified for the light change. Start a soft timer
-      // that will trigger the change after the given delay
-      // Current state remains as is for now
-      lightbulb_state.lightness_target = request->ctl.lightness;
-      lightbulb_state.temperature_target = request->ctl.temperature;
-      lightbulb_state.deltauv_target = request->ctl.deltauv;
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(delay_ms), TIMER_ID_DELAYED_CTL, 1);
-      // store transition parameter for later use
-      delayed_ctl_trans = transition_ms;
-    } else {
-      // no delay but transition time has been set.
-      lightbulb_state.lightness_target = request->ctl.lightness;
-      lightbulb_state.temperature_target = request->ctl.temperature;
-      lightbulb_state.deltauv_target = request->ctl.deltauv;
-
-      LEDS_SetLevel(lightbulb_state.lightness_target, transition_ms);
-      LEDS_SetTemperature(lightbulb_state.temperature_target, lightbulb_state.deltauv_target, transition_ms);
-
-      // lightbulb current state will be updated when transition is complete
-      gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(transition_ms), TIMER_ID_CTL_TRANSITION, 1);
-    }
-    lightbulb_state_changed();
-  }
 
   if (request_flags & MESH_REQUEST_FLAG_RESPONSE_REQUIRED) {
-    ctl_response(element_index, client_addr, appkey_index);
+	  printf("Sending Response to Gateway\r\n");
+   if(ctl_response(element_index, client_addr, appkey_index)){
+	   printf("Error in sending Response\r\n");
+   }
   } else {
-    ctl_update(element_index);
+	  printf("No response Needed\r\n");
+//    ctl_update(element_index);
   }
+  return;
 }
 
 static void ctl_change(uint16_t model_id,
@@ -1555,11 +1517,11 @@ void lightbulb_state_init(void)
   mesh_lib_init(malloc, free, 8);
 
   //Initialize Friend functionality
-  printf("Friend mode initialization\r\n");
-  res = gecko_cmd_mesh_friend_init()->result;
-  if (res) {
-    printf("Friend init failed 0x%x\r\n", res);
-  }
+//  printf("Friend mode initialization\r\n");
+//  res = gecko_cmd_mesh_friend_init()->result;
+//  if (res) {
+//    printf("Friend init failed 0x%x\r\n", res);
+//  }
 
   memset(&lightbulb_state, 0, sizeof(struct lightbulb_state));
   if (lightbulb_state_load() != 0) {
@@ -1657,6 +1619,9 @@ void set_device_name(bd_addr *pAddr)
 
   // create unique device name using the last two bytes of the Bluetooth address
   sprintf(name, "light node %x:%x", pAddr->addr[1], pAddr->addr[0]);
+
+  memcpy(myBTAddr.addr,pAddr->addr, 6);
+  printf("MY BT Addr %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
 
   printf("Device name: '%s'\r\n", name);
 
@@ -1977,8 +1942,8 @@ int main()
   //gecko_bgapi_class_mesh_health_client_init();
   //gecko_bgapi_class_mesh_health_server_init();
   //gecko_bgapi_class_mesh_test_init();
-  //gecko_bgapi_class_mesh_lpn_init();
-  gecko_bgapi_class_mesh_friend_init();
+//  gecko_bgapi_class_mesh_lpn_init();
+//  gecko_bgapi_class_mesh_friend_init();
 
   gecko_initCoexHAL();
 
@@ -2041,6 +2006,8 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         struct gecko_msg_system_get_bt_address_rsp_t *pAddr = gecko_cmd_system_get_bt_address();
 
         set_device_name(&pAddr->address);
+//        memcpy(myBTAddr.addr,pAddr->address.addr, 6);
+//        printf("MY BT Addr %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
 
         // Initialize Mesh stack in Node operation mode, wait for initialized event
         result = gecko_cmd_mesh_node_init()->result;
@@ -2149,7 +2116,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
         printf("Light initial state is <%s>\r\n", lightbulb_state.onoff_current ? "ON" : "OFF");
         DI_Print("provisioned", DI_ROW_STATUS);
-        printf("Enabling the LETIMER\r\n");
+//        printf("Enabling the LETIMER\r\n");
       } else {
         printf("node is unprovisioned\r\n");
         DI_Print("unprovisioned", DI_ROW_STATUS);

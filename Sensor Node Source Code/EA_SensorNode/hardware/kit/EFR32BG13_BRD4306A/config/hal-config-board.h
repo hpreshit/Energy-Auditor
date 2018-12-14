@@ -411,7 +411,7 @@
 // $[VCOM]
 
 #define BSP_VCOM_ENABLE_PIN                           (5U)
-#define BSP_VCOM_ENABLE_PORT                          (gpioPortA)
+//#define BSP_VCOM_ENABLE_PORT                          (gpioPortA)
 
 // [VCOM]$
 

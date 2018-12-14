@@ -116,11 +116,17 @@ uint8_t boot_to_dfu = 0;
 #define TIMER_ID_PROVISIONING   66
 #define TIMER_ID_RETRANS    10
 #define TIMER_ID_FRIEND_FIND 20
+#define TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE 15
+
+///** Minimum color temperature 800K */
+//#define TEMPERATURE_MIN      0x0320
+///** Maximum color temperature 20000K */
+//#define TEMPERATURE_MAX      0x4e20
 
 /** Minimum color temperature 800K */
-#define TEMPERATURE_MIN      0x0320
+#define TEMPERATURE_MIN      0
 /** Maximum color temperature 20000K */
-#define TEMPERATURE_MAX      0x4e20
+#define TEMPERATURE_MAX      0xFFFF
 
 #define DELTA_UV  0
 
@@ -145,6 +151,9 @@ static uint32 pb1_press;
 #define LONG_PRESS_TIME_TICKS   (32768 / 4)
 
 #define VERY_LONG_PRESS_TIME_TICKS  (32768)
+
+//gunj
+bd_addr myBTAddr = {0};
 
 /* external signal definitions. these are used to signal button press events from GPIO interrupt handler to
  * application */
@@ -267,6 +276,51 @@ void enable_button_interrupts(void)
   GPIOINT_CallbackRegister(BSP_BUTTON1_PIN, gpioint);
 }
 
+void publish_SamplingRequest(int retrans, bool startSampling){
+
+	uint16 resp;
+	uint16 delay;
+	struct mesh_generic_request req;
+	const uint32 transtime = 0; /* using zero transition time by default */
+
+	req.kind = mesh_generic_request_on_off;
+	req.on_off = startSampling;
+
+	// increment transaction ID for each request, unless it's a retransmission
+	if (retrans == 0) {
+		trid++;
+	}
+
+	/* delay for the request is calculated so that the last request will have a zero delay and each
+	 * of the previous request have delay that increases in 50 ms steps. For example, when using three
+	 * on/off requests per button press the delays are set as 100, 50, 0 ms
+	 */
+	delay = (request_count - 1) * 50;
+
+	resp = gecko_cmd_mesh_generic_client_publish(
+			MESH_GENERIC_ON_OFF_CLIENT_MODEL_ID,
+			_elem_index,
+			trid,
+			transtime,   // transition time in ms
+			delay,
+			0,     // flags
+			mesh_generic_request_on_off,     // type
+			1,     // param len
+			&req.on_off     /// parameters data
+	)->result;
+
+	if (resp) {
+		printf("Publish Sampling. gecko_cmd_mesh_generic_client_publish failed,code %x\r\n", resp);
+	} else {
+		printf("Publish Sampling. request sent, trid = %u, delay = %d\r\n", trid, delay);
+	}
+
+	/* keep track of how many requests has been sent */
+	if (request_count > 0) {
+		request_count--;
+	}
+}
+
 
 /**
  * This function publishes one on/off request to change the state of light(s) in the group.
@@ -358,8 +412,10 @@ void send_lightness_request(int retrans)
     printf("request sent, trid = %u, delay = %d\r\n", trid, delay);
   }
 }
+void send_ctl_request(int retrans){
 
-void send_ctl_request(int retrans)
+}
+void publishEpochTime(int retrans)
 {
   uint16 resp;
   uint16 delay;
@@ -368,10 +424,8 @@ void send_ctl_request(int retrans)
   req.kind = mesh_lighting_request_ctl;
   uint32_t epochTime = RTCC_CounterGet();
   printf("Sending EpochTime:%lu\r\n",epochTime);
-//  temperature_level = 800;	//800 - LS 2 bytes of epoch time //801 - MS 2 bytes of epoch time
   req.ctl.lightness = (epochTime & 0xFFFF0000) >> 16;
   req.ctl.temperature = 800;
-//  req.ctl.deltauv = DELTA_UV; //hardcoded delta uv
   req.ctl.deltauv = 1; //Gateway ID
 
   req2 = req;
@@ -410,7 +464,7 @@ void send_ctl_request(int retrans)
       trid,
 	  0,     // transition
       delay,
-      0,     // flags
+	  1,     // flags
       mesh_lighting_request_ctl, // type
       6,     // param len
       (uint8*)&req2.ctl   /// parameters data
@@ -543,7 +597,7 @@ void switch_node_init(void)
 {
   mesh_lib_init(malloc, free, 8);
 
-  lpn_init();
+//  lpn_init();
 }
 
 static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt);
@@ -581,6 +635,8 @@ void set_device_name(bd_addr *pAddr)
 
   // create unique device name using the last two bytes of the Bluetooth address
   sprintf(name, "switch node %x:%x", pAddr->addr[1], pAddr->addr[0]);
+  memcpy(myBTAddr.addr,pAddr->addr, 6);
+  printf("MY BT Addr %x:%x:%x:%x\r\n", myBTAddr.addr[3], myBTAddr.addr[2],myBTAddr.addr[1], myBTAddr.addr[0]);
 
   printf("Device name: '%s'\r\n", name);
 
@@ -615,6 +671,20 @@ void initiate_factory_reset(void)
   gecko_cmd_hardware_set_soft_timer(2 * 32768, TIMER_ID_FACTORY_RESET, 1);
 }
 
+//gunj
+bool publishedTime = false;
+bool startApplication = false;
+
+#define MAX_SENSOR_NODES 8
+struct sensorNodeDetails{
+	uint32_t sensorNodeIndex;
+	uint8_t btAddr[4];
+	uint32_t epochTime[2];
+	uint16_t currentReading[2];
+}SensorNodes[8] = {0};
+
+uint32_t sensorNodeRegisteredCount = 0;
+
 int main()
 {
   // Initialize device
@@ -648,8 +718,8 @@ int main()
   //gecko_bgapi_class_mesh_health_client_init();
   //gecko_bgapi_class_mesh_health_server_init();
   //gecko_bgapi_class_mesh_test_init();
-  gecko_bgapi_class_mesh_lpn_init();
-  //gecko_bgapi_class_mesh_friend_init();
+//  gecko_bgapi_class_mesh_lpn_init();
+//  gecko_bgapi_class_mesh_friend_init();
 
   gecko_initCoexHAL();
 
@@ -730,7 +800,8 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
           break;
 
         case TIMER_ID_RETRANS:
-          send_onoff_request(1);   // param 1 indicates that this is a retransmission
+//          send_onoff_request(1);   // param 1 indicates that this is a retransmission
+//        	publish_SamplingRequest(0, true);
           // stop retransmission timer if it was the last attempt
           if (request_count == 0) {
             gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_RETRANS, 0);
@@ -747,6 +818,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
           }
         }
         break;
+
+        case TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE:
+        {
+        	printf("No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n");
+        	publish_SamplingRequest(0, true);
+        	startApplication = true;
+        }
+        	break;
 
         default:
           break;
@@ -784,23 +863,26 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     case gecko_evt_system_external_signal_id:
     {
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_SHORT_PRESS) {
-        handle_button_press(0);
+//        handle_button_press(0);
       }
 
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_SHORT_PRESS) {
-        handle_button_press(1);
+//        handle_button_press(1);
       }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_LONG_PRESS) {
-        handle_long_press(0);
+//        handle_long_press(0);
       }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_LONG_PRESS) {
-        handle_long_press(1);
+//        handle_long_press(1);
       }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_VERY_LONG_PRESS) {
-        handle_very_long_press(0);
+    	  printf("Very long press\r\n");
+    	  publishEpochTime(0);
+    	  publishedTime = true;
+//        handle_very_long_press(0);
       }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_VERY_LONG_PRESS) {
-        handle_very_long_press(1);
+//        handle_very_long_press(1);
       }
     }
     break;
@@ -848,27 +930,99 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       break;
 
     case gecko_evt_mesh_generic_client_server_status_id:
+    {
+    	uint16_t server_addr = evt->data.evt_mesh_generic_client_server_status.server_address;
     	printf("--------\r\n");
-    	printf("Server: 0x%x Status ID\r\n",evt->data.evt_mesh_generic_client_server_status.server_address);
+    	printf("Server: 0x%x Status ID\r\n",server_addr);
+    	//for lighting ctl model
+    	if(evt->data.evt_mesh_generic_client_server_status.model_id == MESH_LIGHTING_CTL_CLIENT_MODEL_ID){
 
-    	struct mesh_generic_state current, target;
-    	int hasTarget = 0;
-    	mesh_lib_deserialize_state(&current,&target,&hasTarget, mesh_lighting_state_ctl,
-    			evt->data.evt_mesh_generic_client_server_status.parameters.data,
-				evt->data.evt_mesh_generic_client_server_status.parameters.len);
+    		printf("RESPONSE FROM SERVER for CTL model\r\n");
+    		struct mesh_generic_state current, target;
+    		int hasTarget = 0;
+    		mesh_lib_deserialize_state(&current,&target,&hasTarget, mesh_lighting_state_ctl,
+    				evt->data.evt_mesh_generic_client_server_status.parameters.data,
+					evt->data.evt_mesh_generic_client_server_status.parameters.len);
 
-    	printf("Current Value: %umA\r\n",current.ctl.lightness);
-    	if(hasTarget){
-			printf("Time Offset: %u\r\n",target.ctl.lightness);
-			printf("Abs Time: %lu\r\n",RTCC_CounterGet()+target.ctl.lightness);
+    		//if just populating the sensor node structures.
+    		//everytime we get a response, start a soft time of 200ms to send the on off request.
+    		//update the the soft timer expiry every time you get a response from server with its details
+    		//so, if we don't get any response from any of the sensor node within 200ms, we start the application and
+    		//assume the setup is done
+    		//on the 200ms timer expiry callback, we set a flag called startApplication to true.
+    		if(publishedTime && startApplication == false){
+    			uint32_t SIndex = server_addr;
+    			if(SIndex > MAX_SENSOR_NODES){
+    				printf("[ERROR] Server Index out of Range\r\n");
+    				while(1);
+    			}
+    			SensorNodes[SIndex].sensorNodeIndex = SIndex;
+    			memcpy(&SensorNodes[SIndex].btAddr[0],(uint8_t*)&current.ctl.lightness,2);
+    			memcpy(&SensorNodes[SIndex].btAddr[2],(uint8_t*)&target.ctl.lightness,2);
+    			SensorNodes[SIndex].epochTime[0] = 0;
+    			SensorNodes[SIndex].epochTime[1] = 0;
+    			SensorNodes[SIndex].currentReading[0] = 0;
+    			SensorNodes[SIndex].currentReading[1] = 0;
+    			uint8_t *p_addr = (uint8_t*)&SensorNodes[SIndex].btAddr[0];
+    			printf("Sensor Node %x:%x:%x:%x Registered\r\n",p_addr[3],p_addr[2],p_addr[1],p_addr[0]);
+    			sensorNodeRegisteredCount++;
+    			printf("Node count: %lu\r\n",sensorNodeRegisteredCount);
+    			//stop the timer, start the timer with 200ms
+    			gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
+    			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(500), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
+    			if (result) {
+    				printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
+    				while(1);
+    			}
+    		}
+    		else if(startApplication){
+    			static uint32_t nodeResponseCount = 0;
+    			uint32_t SIndex = server_addr;
+    			if(SIndex < MAX_SENSOR_NODES){
+
+    				if(SensorNodes[SIndex].sensorNodeIndex){
+
+    					printf("Data Response from Sensor Node:%lu\r\n",SIndex);
+    					uint16_t currentValue = current.ctl.lightness;
+    					uint32_t epochTime = target.ctl.lightness;
+    					//update the previous reading with the stale latest reading
+    					//update the stale latest reading with the latest reading
+    					SensorNodes[SIndex].currentReading[0] = SensorNodes[SIndex].currentReading[1];
+    					SensorNodes[SIndex].currentReading[1] = currentValue;
+    					printf("Current Value: %umA --> %umA\r\n",SensorNodes[SIndex].currentReading[0], SensorNodes[SIndex].currentReading[1]);
+    					if(hasTarget){
+    						SensorNodes[SIndex].epochTime[0] = SensorNodes[SIndex].epochTime[1];
+    						SensorNodes[SIndex].epochTime[1] = (RTCC_CounterGet()| epochTime);
+    						printf("Time Offset: %lu\r\n",epochTime);
+    						printf("Abs Time: %lus --> %lus\r\n", SensorNodes[SIndex].epochTime[0], SensorNodes[SIndex].epochTime[1]);
+    					}
+    					else{
+    						printf("Should have the target field. Strange....\r\n");
+    					}
+    					nodeResponseCount++;
+//    					printf("Raw Data:");
+//    					for(int i = 0; i<evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
+//    						printf(" %d ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
+//    					}
+//    					printf("\r\n");
+    				}
+    				else{
+    					printf("Sensor Node not registered at startup\r\n");
+    				}
+    				if(nodeResponseCount == sensorNodeRegisteredCount){
+    					nodeResponseCount = 0;
+    					printf("Got sampled current data from all node. Push to gateway\r\n");
+    					//TODO:Set an event or directly call the function to send the data to Cloud
+    				}
+    			}
+    			else{
+    				printf("[ERROR] Sensor Node Index out of Range\r\n");
+//    				while(1);
+    			}
+    		}
     	}
-    	printf("Raw Data:");
-    	for(int i = 0; i<evt->data.evt_mesh_generic_client_server_status.parameters.len; i++){
-    		printf(" %d ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
-    	}
-    	printf("\r\n");
-
-    	break;
+    }
+    break;
 
     case gecko_evt_mesh_generic_server_state_changed_id:
     	printf("Server state changed id\r\n");
@@ -889,8 +1043,8 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       conn_handle = evt->data.evt_le_connection_opened.connection;
       DI_Print("connected", DI_ROW_CONNECTION);
       // turn off lpn feature after GATT connection is opened
-      gecko_cmd_mesh_lpn_deinit();
-      DI_Print("LPN off", DI_ROW_LPN);
+//      gecko_cmd_mesh_lpn_deinit();
+//      DI_Print("LPN off", DI_ROW_LPN);
       break;
 
     case gecko_evt_le_connection_closed_id:
@@ -906,7 +1060,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         if (--num_connections == 0) {
           DI_Print("", DI_ROW_CONNECTION);
 
-          lpn_init();
+//          lpn_init();
         }
       }
       break;
