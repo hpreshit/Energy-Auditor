@@ -326,7 +326,7 @@
     <rect>
      <x>40</x>
      <y>155</y>
-     <width>211</width>
+     <width>201</width>
      <height>31</height>
     </rect>
    </property>
@@ -406,7 +406,7 @@
     <rect>
      <x>290</x>
      <y>155</y>
-     <width>211</width>
+     <width>201</width>
      <height>31</height>
     </rect>
    </property>
@@ -706,7 +706,7 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLineEdit" name="node1CurrentDisplay_2">
+  <widget class="QLineEdit" name="node2CurrentDisplay">
    <property name="geometry">
     <rect>
      <x>300</x>
@@ -724,7 +724,7 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLineEdit" name="node1PowerDisplay_2">
+  <widget class="QLineEdit" name="node2PowerDisplay">
    <property name="geometry">
     <rect>
      <x>415</x>
@@ -742,7 +742,7 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLineEdit" name="node1CurrentDisplay_3">
+  <widget class="QLineEdit" name="node3CurrentDisplay">
    <property name="geometry">
     <rect>
      <x>535</x>
@@ -760,7 +760,7 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLineEdit" name="node1PowerDisplay_3">
+  <widget class="QLineEdit" name="node3PowerDisplay">
    <property name="geometry">
     <rect>
      <x>640</x>
