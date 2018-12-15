@@ -80,6 +80,7 @@ void LETIMER_setCompValue(){
 void LETIMER_enable(){
 	CORE_AtomicDisableIrq();
 	sampleCount = 0;
+	secondsCount = 0;
 	max_adcValue = 0;
 	CORE_AtomicEnableIrq();
 	//Clear Interrupt flags

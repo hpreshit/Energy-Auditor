@@ -1973,7 +1973,7 @@ int main()
   LEDS_init();
   button_init();
 
-//  DI_Init();
+  DI_Init();
 
   CMU_ClockEnable(cmuClock_RTCC, true);
 
