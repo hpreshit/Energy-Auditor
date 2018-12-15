@@ -10,9 +10,6 @@
 //***********************************************************************************
 #include "em_rtcc.h"
 #include "letimer.h"
-#include "adc0.h"
-#include "em_adc.h"
-#include "em_letimer.h"
 #include "native_gecko.h"
 /* GATT database */
 #include "gatt_db.h"
@@ -21,7 +18,7 @@
 // global variables
 //***********************************************************************************
 uint16_t prescalar    			= 1;
-//volatile uint32_t adcSampleValue= 0;
+volatile uint32_t adcSampleValue= 0;
 volatile uint32_t max_adcValue 	= 0;
 volatile uint32_t avg_adcValue	= 0;
 uint32_t ondutycount  			= 0;
@@ -34,7 +31,7 @@ volatile uint32_t g_ADCepochTime= 0;
 //***********************************************************************************
 // function prototypes
 //***********************************************************************************
-void letimer_init(){
+void LETIMER_init(){
 	LETIMER_Enable(LETIMER0,false);								//Disable LETIMER0
 
 	const LETIMER_Init_TypeDef letimer0Init =
@@ -51,9 +48,15 @@ void letimer_init(){
 	};
 
 	LETIMER_Init(LETIMER0,&letimer0Init);						//Initialize LETIMER0
+
+	// Set prescalar
+	LETIMER_setPrescalar();
+
+	// COMP0 and COMP1 values
+	LETIMER_setCompValue();
 }
 
-void letimer_set_prescalar(){
+void LETIMER_setPrescalar(){
 	uint16_t countermax = 0xFFFF;
 
 	clockFreq = CMU_ClockFreqGet(cmuClock_LETIMER0);			//Get Clock frequency for LETIMER0
@@ -64,7 +67,7 @@ void letimer_set_prescalar(){
 	CMU_ClockDivSet(cmuClock_LETIMER0, prescalar);				//Set prescalar
 }
 
-void letimer_set_compvalue(){
+void LETIMER_setCompValue(){
 	periodcount = 0;
 	ondutycount = 0;
 
@@ -74,7 +77,7 @@ void letimer_set_compvalue(){
 	LETIMER_CompareSet(LETIMER0,0,periodcount);						//Set COMP0 register value
 }
 
-void letimer_enable(){
+void LETIMER_enable(){
 	CORE_AtomicDisableIrq();
 	sampleCount = 0;
 	max_adcValue = 0;
@@ -93,38 +96,32 @@ void letimer_enable(){
 	LETIMER_Enable(LETIMER0,true);	    //Enable LETIMER0
 }
 
-void letimer_disable(){
+void LETIMER_disable(){
 	LETIMER0->CMD = LETIMER_CMD_STOP | LETIMER_CMD_CLEAR;
 //	LETIMER_Enable(LETIMER0,false);
 }
 
 void LETIMER0_IRQHandler(void){
-
 	CORE_AtomicDisableIrq();
 	uint32_t flagInterrupt = LETIMER_IntGet(LETIMER0);
 	if(flagInterrupt & LETIMER_IF_COMP1){
 		LETIMER_IntClear(LETIMER0,LETIMER_IF_COMP1);	//clear comp1 interrupt flag
 		sampleCount++;
-		uint32_t adcSampleValue = ADC_DataSingleGet(ADC0);
-		max_adcValue = max(adcSampleValue,max_adcValue);
-		if(sampleCount==20){
-			LETIMER_IntDisable(LETIMER0,LETIMER_IF_COMP1);
-			sampleCount=0;
-//			ADC0_stop();
-		}
+		LDMA_StartTransfer(LDMA_CHANNEL, &trans, &descr);
+//		ADC0_stop();
 		LETIMER_CompareSet(LETIMER0,1,(periodcount-(ondutycount*(sampleCount+1)))); 		//Set COMP1 register value
 	}
 
 	if(flagInterrupt & LETIMER_IF_UF){
 		LETIMER_IntClear(LETIMER0,LETIMER_IF_UF);		//clear underflow interrupt flag
 		avg_adcValue = ((avg_adcValue*secondsCount) + max_adcValue)/(secondsCount + 1);
-//		secondsCount++;
+		secondsCount++;
 		max_adcValue = 0;
-//		if(secondsCount==2){
-		g_ADCepochTime = RTCC_CounterGet();
+		if(secondsCount==2){
+			g_ADCepochTime = RTCC_CounterGet();
 			gecko_external_signal(EXT_SIGNAL_SEND_CURRENT_VALUE);
-//			secondsCount = 0;
-//		}
+			secondsCount = 0;
+		}
 //		ADC0_start();
 		LETIMER_CompareSet(LETIMER0,1,(periodcount-ondutycount)); 		//Set COMP1 register value
 		LETIMER_IntEnable(LETIMER0,LETIMER_IF_COMP1);

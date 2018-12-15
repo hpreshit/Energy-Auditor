@@ -270,11 +270,11 @@ static void onoff_request(uint16_t model_id,
 
   if(request->on_off == true){
 	  printf("Enabling LETIMER sampling\r\n");
-	  letimer_enable();
+	  LETIMER_enable();
   }
   else{
 	  printf("Disabling LETIMER sampling\r\n");
-	  letimer_disable();
+	  LETIMER_disable();
   }
   return;
 
@@ -1959,16 +1959,13 @@ int main()
 
   cmu_init_LETIMER0(1);
   // Initialize LETIMER
-  letimer_init();
-  // Set prescalar
-  letimer_set_prescalar();
-  // COMP0 and COMP1 values
-  letimer_set_compvalue();
+  LETIMER_init();
   // Setup ADC
   ADC0_setup();
   // Start ADC conversion
   ADC0_start();
-
+  // Setup DMA to move ADC results to user memory
+  LDMA_init();
   /* initialize LEDs and buttons. Note: some radio boards share the same GPIO for button & LED.
    * Initialization is done in this order so that default configuration will be "button" for those
    * radio boards with shared pins. LEDS_init() is called later as needed to (re)initialize the LEDs
@@ -2191,14 +2188,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       printf("evt gecko_evt_mesh_friend_friendship_established, lpn_address=%x\r\n", evt->data.evt_mesh_friend_friendship_established.lpn_address);
       DI_Print("FRIENDSHIP DONE", DI_ROW_FRIEND);
 //      printf("Enabling the LETIMER\r\n");
-//      letimer_enable();
+//      LETIMER_enable();
       break;
 
     case gecko_evt_mesh_friend_friendship_terminated_id:
       printf("evt gecko_evt_mesh_friend_friendship_terminated, reason=%x\r\n", evt->data.evt_mesh_friend_friendship_terminated.reason);
 //      DI_Print("NO LPN", DI_ROW_FRIEND);
       printf("Disabling the LETIMER\r\n");
-//      letimer_disable();
+//      LETIMER_disable();
       break;
 
     case gecko_evt_le_gap_adv_timeout_id:

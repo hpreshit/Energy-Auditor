@@ -22,10 +22,9 @@ volatile bool debounceFlag;
 //***********************************************************************************
 // function prototypes
 //***********************************************************************************
+void ADC0_init(void);
 void ADC0_setup(void);
 void ADC0_start(void);
-void ADC_window_out();
-void ADC_window_in();
 void ADC0_stop();
 
 
