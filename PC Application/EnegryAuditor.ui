@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EnegyAuditor</class>
- <widget class="QWidget" name="EnegyAuditor">
+ <class>EnergyAuditor</class>
+ <widget class="QWidget" name="EnergyAuditor">
   <property name="enabled">
    <bool>true</bool>
   </property>
@@ -20,6 +20,10 @@
   </property>
   <property name="windowTitle">
    <string>Energy Auditor</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>Images/logo.png</normaloff>Images/logo.png</iconset>
   </property>
   <property name="windowOpacity">
    <double>7.000000000000000</double>
@@ -298,7 +302,7 @@
     </font>
    </property>
   </widget>
-  <widget class="QLabel" name="uiLabel">
+  <widget class="QLabel" name="applicationLogo">
    <property name="geometry">
     <rect>
      <x>255</x>
@@ -628,7 +632,7 @@
   <connection>
    <sender>exitButton</sender>
    <signal>clicked()</signal>
-   <receiver>EnegyAuditor</receiver>
+   <receiver>EnergyAuditor</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
