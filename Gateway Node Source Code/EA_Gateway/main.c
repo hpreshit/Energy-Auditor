@@ -117,6 +117,7 @@ uint8_t boot_to_dfu = 0;
 #define TIMER_ID_RETRANS    10
 #define TIMER_ID_FRIEND_FIND 20
 #define TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE 15
+#define TIMER_ID_SENSOR_RESPONSE_TIMEOUT	19
 
 ///** Minimum color temperature 800K */
 //#define TEMPERATURE_MIN      0x0320
@@ -667,12 +668,16 @@ struct sensorNodeDetails{
 	uint8_t btAddr[4];
 	uint32_t epochTime[2];
 	uint16_t currentReading[2];
-}SensorNodes[8] = {0};
+	bool staleReading;
+	bool sensorNodeConnected;
+}SensorNodes[MAX_SENSOR_NODES] = {0};
 
-#define MAKE_SINDEX(x) (x-2)
+#define MAKE_SINDEX(x) ((x-1)>>1)
 #define WAIT_FOR_LAST_RESPONSE_TIME_MS (500)
+#define SENSOR_NODE_DATA_RESPONSE_TIMEOUT_MS	(10000)
 
-uint32_t sensorNodeRegisteredCount = 0;
+static uint32_t sensorNodeRegisteredCount = 0;
+static uint32_t nodeResponseCount = 0;
 
 int main()
 {
@@ -789,6 +794,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
           break;
 
         case TIMER_ID_RETRANS:
+        	//TODO: retransmission
 //          send_onoff_request(1);   // param 1 indicates that this is a retransmission
 //        	publish_SamplingRequest(0, true);
           // stop retransmission timer if it was the last attempt
@@ -810,11 +816,48 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
         case TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE:
         {
-        	printf("T: %lu. No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n",RTCC_CounterGet());
-        	publish_SamplingRequest(0, true);
-        	startApplication = true;
+        	if(sensorNodeRegisteredCount){
+        		printf("T: %lu. No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n",RTCC_CounterGet());
+        		publish_SamplingRequest(0, true);
+        		startApplication = true;
+        	}
+        	else{
+        		printf("No node registered. No need to publish. Press PB0 again to recapture Sensor Nodes\r\n");
+        	}
         }
-        	break;
+        break;
+
+        case TIMER_ID_SENSOR_RESPONSE_TIMEOUT:
+        {
+        	if(nodeResponseCount == sensorNodeRegisteredCount){
+        		for(uint8_t i = 0; i<MAX_SENSOR_NODES && SensorNodes[i].sensorNodeIndex; i++){
+        			SensorNodes[i].staleReading = true;
+        		}
+        		printf("Data collected from -ALL- Sensor Nodes.\r\n");
+        	}
+        	else if(nodeResponseCount < sensorNodeRegisteredCount){
+        		static uint8_t partialNodesRespond = 0;
+        		//Timeout and there are still some nodes left to send out the data
+        		//adding a stale/fresh flag along with sensor node connected/disconnected flag
+        		printf("Data collected from -SOME- Sensor Nodes. Updating connected flags.\r\n");
+        		for(uint8_t i = 0; (i<MAX_SENSOR_NODES) && (SensorNodes[i].sensorNodeIndex); i++){
+        			if(SensorNodes[i].staleReading){
+        				printf("No response from Sensor Node:%lu\r\n",SensorNodes[i].sensorNodeIndex);
+        				SensorNodes[i].sensorNodeConnected = false;
+        			}
+        		}
+        		partialNodesRespond++;
+        		if(partialNodesRespond > 10){
+        			partialNodesRespond = 0;
+        			gecko_cmd_system_reset(0);
+        		}
+        	}
+        	nodeResponseCount = 0;
+        	printf(">>Pushing to Cloud>>>>>>>>>>>>>>>>>>>>>>>\r\n");
+        	//printf("_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\r\n");
+        	//TODO:Set an event or directly call the function to send the data to Cloud
+        }
+        break;
 
         default:
           break;
@@ -952,13 +995,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     			SensorNodes[SIndex].epochTime[1] = 0;
     			SensorNodes[SIndex].currentReading[0] = 0;
     			SensorNodes[SIndex].currentReading[1] = 0;
+    			SensorNodes[SIndex].staleReading = true;
+    			SensorNodes[SIndex].sensorNodeConnected = false;
     			uint8_t *p_addr = (uint8_t*)&SensorNodes[SIndex].btAddr[0];
     			printf("Sensor Node %x:%x:%x:%x Registered\r\n",p_addr[3],p_addr[2],p_addr[1],p_addr[0]);
     			sensorNodeRegisteredCount++;
     			printf("Node count: %lu. T:%lu\r\n",sensorNodeRegisteredCount,RTCC_CounterGet());
     			//stop the timer, start the timer with 200ms
     			gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
-    			//TODO: add the macro for timer tick ms
     			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(WAIT_FOR_LAST_RESPONSE_TIME_MS), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
     			if (result) {
     				printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
@@ -966,19 +1010,20 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     			}
     		}
     		else if(startApplication){
-    			static uint32_t nodeResponseCount = 0;
     			uint32_t SIndex = MAKE_SINDEX(server_addr);
     			if(SIndex < MAX_SENSOR_NODES){
 
     				if(SensorNodes[SIndex].sensorNodeIndex){
 
-    					printf("Sensor Node:%lu {\r\n",SIndex);
+    					printf("Sensor Node:%lu {\r\n",SensorNodes[SIndex].sensorNodeIndex);
     					uint16_t currentValue = current.ctl.lightness;
     					uint32_t epochTime = target.ctl.lightness;
     					//update the previous reading with the stale latest reading
     					//update the stale latest reading with the latest reading
     					SensorNodes[SIndex].currentReading[0] = SensorNodes[SIndex].currentReading[1];
     					SensorNodes[SIndex].currentReading[1] = currentValue;
+    					SensorNodes[SIndex].staleReading = false;
+    					SensorNodes[SIndex].sensorNodeConnected = true;
     					printf("Current: %umA --> %umA\r\n",SensorNodes[SIndex].currentReading[0], SensorNodes[SIndex].currentReading[1]);
     					if(hasTarget){
     						SensorNodes[SIndex].epochTime[0] = SensorNodes[SIndex].epochTime[1];
@@ -995,15 +1040,16 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 //    						printf(" %d ",evt->data.evt_mesh_generic_client_server_status.parameters.data[i]);
 //    					}
 //    					printf("\r\n");
+    					if(nodeResponseCount == 1){
+    						result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(SENSOR_NODE_DATA_RESPONSE_TIMEOUT_MS), TIMER_ID_SENSOR_RESPONSE_TIMEOUT, 1)->result;
+    						if (result) {
+    							printf("Setting TIMEOUT FOR SENSOR DATA Timer fail.  %x\r\n", result);
+    							while(1);
+    						}
+    					}
     				}
     				else{
     					printf("[ERROR]Sensor Node not registered at startup. 'Restart the Gateway' to recapture all nodes\r\n");
-    				}
-    				if(nodeResponseCount == sensorNodeRegisteredCount){
-    					nodeResponseCount = 0;
-    					printf("Data collected from all Sensor Nodes. Pushing to Cloud>>>>>>>>>>>\r\n");
-//    					printf("_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\r\n");
-    					//TODO:Set an event or directly call the function to send the data to Cloud
     				}
     			}
     			else{

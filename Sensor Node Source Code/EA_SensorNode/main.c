@@ -1976,7 +1976,7 @@ int main()
   LEDS_init();
   button_init();
 
-  DI_Init();
+//  DI_Init();
 
   CMU_ClockEnable(cmuClock_RTCC, true);
 
@@ -2250,9 +2250,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     {
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_SEND_CURRENT_VALUE) {
 
-//   		  printf("ADC Raw Value: %lu\r\n",avg_adcValue);
+    	  CORE_ATOMIC_IRQ_DISABLE();
+    	  uint32_t epochTime = g_ADCepochTime;
+    	  uint32_t adcVal = avg_adcValue;
+    	  avg_adcValue = 0;
+    	  CORE_ATOMIC_IRQ_ENABLE();
 
-   		  float voltage = ((float)avg_adcValue*3.3)/4095;
+//   		  printf("ADC Raw Value: %lu\r\n",avg_adcValue);
+   		  float voltage = ((float)adcVal*3.3)/4095;
 
 //   		  printf("ADC Voltage: %f\r\n",voltage);
 
@@ -2260,9 +2265,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
 //   		  printf("ADC Current: %u\r\n",current);
 
-   		  avg_adcValue = 0;
 
-   		  uint32_t epochTime = RTCC_CounterGet();
 		  printf("Sending --> Gateway. Current:%umA @ %lus\r\n",current,epochTime);
 
 		  errorcode_t err = ctl_update_and_publishReadings(0,current,epochTime);

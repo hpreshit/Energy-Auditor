@@ -107,13 +107,14 @@ void ADC0_start(void)
 //	NVIC_EnableIRQ(ADC0_IRQn);
 
 	/* Star the single ended Single mode ADC */
-	ADC_Start(ADC0, adcStartScanAndSingle);
+	ADC_Start(ADC0, adcStartSingle);
 	//unblockSleepMode(ENERGY_MODE_ADC0);
 
 }
 
 void ADC0_stop()
 {
+	ADC_Start(ADC0,ADC_CMD_SINGLESTOP | ADC_CMD_SCANSTOP);
 	ADC_IntDisable(ADC0, ADC_IEN_SINGLECMP);
 	NVIC_DisableIRQ(ADC0_IRQn);
 }

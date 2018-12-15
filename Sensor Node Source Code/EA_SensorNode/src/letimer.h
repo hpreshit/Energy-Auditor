@@ -19,10 +19,11 @@
 
 extern uint32_t ondutycount;
 extern uint32_t periodcount;
-extern uint32_t max_adcValue;
-extern uint32_t avg_adcValue;
-extern uint32_t adcSampleValue;
+extern volatile uint32_t max_adcValue;
+extern volatile uint32_t avg_adcValue;
+//extern volatile uint32_t adcSampleValue;
 extern uint16_t previousCurrentValue;
+extern volatile uint32_t g_ADCepochTime;
 //***********************************************************************************
 // function prototypes
 //***********************************************************************************

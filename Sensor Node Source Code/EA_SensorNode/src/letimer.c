@@ -8,6 +8,7 @@
 //***********************************************************************************
 // Include files
 //***********************************************************************************
+#include "em_rtcc.h"
 #include "letimer.h"
 #include "adc0.h"
 #include "em_adc.h"
@@ -20,15 +21,16 @@
 // global variables
 //***********************************************************************************
 uint16_t prescalar    			= 1;
-uint32_t adcSampleValue			= 0;
-uint32_t max_adcValue 			= 0;
-uint32_t avg_adcValue			= 0;
+//volatile uint32_t adcSampleValue= 0;
+volatile uint32_t max_adcValue 	= 0;
+volatile uint32_t avg_adcValue	= 0;
 uint32_t ondutycount  			= 0;
 uint32_t periodcount  			= 0;
 uint16_t previousCurrentValue	= 0;
 volatile uint32_t clockFreq 	= 0;
 volatile uint16_t sampleCount 	= 0;
 volatile uint16_t secondsCount	= 0;
+volatile uint32_t g_ADCepochTime= 0;
 //***********************************************************************************
 // function prototypes
 //***********************************************************************************
@@ -73,6 +75,10 @@ void letimer_set_compvalue(){
 }
 
 void letimer_enable(){
+	CORE_AtomicDisableIrq();
+	sampleCount = 0;
+	max_adcValue = 0;
+	CORE_AtomicEnableIrq();
 	//Clear Interrupt flags
 	LETIMER0->IFC |= LETIMER_IFC_REP1|LETIMER_IFC_REP1|LETIMER_IFC_UF|LETIMER_IFC_COMP1|LETIMER_IFC_COMP0;
 
@@ -88,7 +94,8 @@ void letimer_enable(){
 }
 
 void letimer_disable(){
-	LETIMER_Enable(LETIMER0,false);
+	LETIMER0->CMD = LETIMER_CMD_STOP | LETIMER_CMD_CLEAR;
+//	LETIMER_Enable(LETIMER0,false);
 }
 
 void LETIMER0_IRQHandler(void){
@@ -98,7 +105,7 @@ void LETIMER0_IRQHandler(void){
 	if(flagInterrupt & LETIMER_IF_COMP1){
 		LETIMER_IntClear(LETIMER0,LETIMER_IF_COMP1);	//clear comp1 interrupt flag
 		sampleCount++;
-		adcSampleValue = ADC_DataSingleGet(ADC0);
+		uint32_t adcSampleValue = ADC_DataSingleGet(ADC0);
 		max_adcValue = max(adcSampleValue,max_adcValue);
 		if(sampleCount==20){
 			LETIMER_IntDisable(LETIMER0,LETIMER_IF_COMP1);
@@ -114,6 +121,7 @@ void LETIMER0_IRQHandler(void){
 //		secondsCount++;
 		max_adcValue = 0;
 //		if(secondsCount==2){
+		g_ADCepochTime = RTCC_CounterGet();
 			gecko_external_signal(EXT_SIGNAL_SEND_CURRENT_VALUE);
 //			secondsCount = 0;
 //		}
