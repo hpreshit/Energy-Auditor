@@ -6,3 +6,4 @@
 **/__Previews/*.PcbDocPreview
 Gateway/__Previews/Gateway.PcbDocPreview
 Gateway/__Previews/*.PcbDocPreview
+PC Application/config_aws.py

@@ -161,7 +161,7 @@
     <bool>false</bool>
    </property>
    <property name="styleSheet">
-    <string notr="true">background-color: rgb(0, 255, 0);</string>
+    <string notr="true">background-color: rgb(255, 0, 0);</string>
    </property>
   </widget>
   <widget class="QPushButton" name="graphButton">
