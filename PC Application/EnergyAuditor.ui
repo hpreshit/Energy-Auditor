@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>762</width>
-    <height>634</height>
+    <height>695</height>
    </rect>
   </property>
   <property name="font">
@@ -238,14 +238,14 @@
   <widget class="QLabel" name="applicationLogo">
    <property name="geometry">
     <rect>
-     <x>290</x>
-     <y>20</y>
-     <width>193</width>
-     <height>111</height>
+     <x>2</x>
+     <y>1</y>
+     <width>759</width>
+     <height>140</height>
     </rect>
    </property>
    <property name="frameShape">
-    <enum>QFrame::NoFrame</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Plain</enum>
@@ -261,6 +261,12 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
+   </property>
+   <property name="openExternalLinks">
+    <bool>true</bool>
+   </property>
+   <property name="textInteractionFlags">
+    <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
    </property>
   </widget>
   <widget class="QLabel" name="node2TimeLabel">
@@ -324,9 +330,9 @@
   <widget class="QLabel" name="node1Label">
    <property name="geometry">
     <rect>
-     <x>20</x>
+     <x>30</x>
      <y>155</y>
-     <width>211</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -347,6 +353,9 @@
    </property>
    <property name="text">
     <string>SENSOR NODE 1</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="Line" name="line">
@@ -404,9 +413,9 @@
   <widget class="QLabel" name="node2Label">
    <property name="geometry">
     <rect>
-     <x>275</x>
+     <x>285</x>
      <y>155</y>
-     <width>211</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -428,13 +437,16 @@
    <property name="text">
     <string>SENSOR NODE 2</string>
    </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
   </widget>
   <widget class="QLabel" name="node3Label">
    <property name="geometry">
     <rect>
-     <x>530</x>
+     <x>540</x>
      <y>155</y>
-     <width>211</width>
+     <width>191</width>
      <height>31</height>
     </rect>
    </property>
@@ -455,6 +467,9 @@
    </property>
    <property name="text">
     <string>SENSOR NODE 3</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
   <widget class="QLabel" name="node2CurrentLabel">
@@ -778,36 +793,17 @@
     <set>Qt::AlignCenter</set>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="applicationLogo2">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>0</x>
      <y>600</y>
-     <width>321</width>
-     <height>31</height>
-    </rect>
-   </property>
-   <property name="frameShape">
-    <enum>QFrame::Box</enum>
-   </property>
-   <property name="text">
-    <string>Documentation: https://github.com/hpreshit/Energy-Auditor</string>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="applicationLogo_2">
-   <property name="geometry">
-    <rect>
-     <x>640</x>
-     <y>40</y>
-     <width>111</width>
+     <width>761</width>
      <height>91</height>
     </rect>
    </property>
    <property name="frameShape">
-    <enum>QFrame::NoFrame</enum>
+    <enum>QFrame::Box</enum>
    </property>
    <property name="frameShadow">
     <enum>QFrame::Plain</enum>
@@ -819,7 +815,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>Images/culogo.png</pixmap>
+    <pixmap>Images/cuengineering.png</pixmap>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -839,7 +835,7 @@
      <y>695</y>
     </hint>
     <hint type="destinationlabel">
-     <x>808</x>
+     <x>761</x>
      <y>579</y>
     </hint>
    </hints>
