@@ -679,8 +679,24 @@ static uint32_t sensorNodeRegisteredCount = 0;
 static uint32_t nodeResponseCount = 0;
 
 #define STATE_KEY 0x4001
-const uint8_t STATE_AUTO_ENABLE_SENSOR_SAMPLING = 10;
-const uint8_t STATE_OK = 5;
+
+typedef enum{
+	UNKNOWN = 0,
+	RESTART_REASON_NO_RESPONSE,
+	RESTART_REASON_NCP_ERROR,
+	RESTART_REASON_NCP_GETTIME_ERROR,
+	RESTART_REASON_LAST,
+}RESTART_REASON;
+
+static uint8_t STATE_AUTO_ENABLE_SENSOR_SAMPLING[2] = {10, 0};
+static uint8_t STATE_OK[2] = {5,0};
+
+const char *getStateStr[RESTART_REASON_LAST] = {
+	"UNKNOWN REASON",
+	"NO RESPONSE FROM ONE OF THE NODES",
+	"NCP COMM ERROR",
+	"NCP GET TIME ERROR",
+};
 
 int main()
 {
@@ -721,7 +737,10 @@ int main()
   gecko_initCoexHAL();
   RETARGET_SerialInit();
   printf("\033[2J\033[H");
-  printf("*****GATEWAY NODE 1******\r\n");
+  printf("------------------------------------------\r\n");
+  printf("              ENERGY AUDITOR              \r\n");
+  printf("           -- GATEWAY NODE 1 --           \r\n");
+  printf("------------------------------------------\r\n");
 
   /* initialize LEDs and buttons. Note: some radio boards share the same GPIO for button & LED.
    * Initialization is done in this order so that default configuration will be "button" for those
@@ -735,6 +754,10 @@ int main()
   uint32_t time = get_NetworkEpochTime(&err);
   if(err){
 	  LOG_ERROR("NCP Time. Restarting...\r\n");
+	  STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NCP_GETTIME_ERROR;
+	  gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
+			  STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+	  STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
 	  gecko_cmd_system_reset(0);
   }
   printf("Network Time:%lu\r\n",time);
@@ -901,8 +924,11 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         			}
         		}
         		partialNodesRespond++;
-        		if(partialNodesRespond > 10){
-        			gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+        		if(partialNodesRespond > 4){
+        			STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NO_RESPONSE;
+        			gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
+        					STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+        			STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
         			partialNodesRespond = 0;
         			gecko_cmd_system_reset(0);
         		}
@@ -919,7 +945,10 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 						ret = MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[i]);
 						if(ret == -1){
 							printf("[ERROR] MQTT PUBLISH\r\n");
-							gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+							STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NCP_ERROR;
+							gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
+									STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+							STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
 							gecko_cmd_system_reset(0);
 
 						}
@@ -956,17 +985,18 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         struct gecko_msg_flash_ps_load_rsp_t *rsp = gecko_cmd_flash_ps_load(STATE_KEY);
         LOG_DEBUG("PS Result: %u\r\n",rsp->result);
         if(rsp->result == 0){
-        	if(rsp->value.len == 1 && rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING){
-        		LOG_INFO("Self Healing Mode\r\n");
-        		gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_OK);
+        	if(rsp->value.len == sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING)
+        			&& rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING[0]){
+        		LOG_INFO("\r\n-*-*-Self Healing Mode-*-*-\r\n**Restart Reason:%s**\r\n",getStateStr[STATE_AUTO_ENABLE_SENSOR_SAMPLING[1]]);
+        		gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_OK), STATE_OK);
         		gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
         	}
-        	else if(rsp->value.len == 1 && rsp->value.data[0] == STATE_OK){
+        	else if(rsp->value.len == 1 && rsp->value.data[0] == STATE_OK[0]){
         		publish_SamplingRequest(0, false);
         	}
         }else{
         	LOG_INFO("Saving State OK for first time\r\n");
-        	gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_OK);
+        	gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_OK), STATE_OK);
         	publish_SamplingRequest(0, false);
         }
 
