@@ -737,6 +737,34 @@ int main()
   gecko_initCoexHAL();
   RETARGET_SerialInit();
   printf("\033[2J\033[H");
+
+printf("\
+         `.://////////////////////////////////////////:-`\r\n   \
+     .////:--------------------------------------:////.\r\n  \
+      ///-                                          -///\r\n	\
+///.             `.--::::::::--.`             .///\r\n	\
+///.          .-//////:////://////:.          .///\r\n	\
+///.       `-////:-.`  ://:  ``-:////-`       .///\r\n	\
+///.      -////:`       ``       `:////-      .///\r\n	\
+///.    `://////:          ``    ://////:`    .///\r\n	\
+///.   `///:` ..         `:/-     .. `:///`   .///\r\n	\
+///.   ://:             -//:           ://:`  .///\r\n	\
+///.  .///`           .////.           `///-  .///\r\n	\
+///.  :///..        `://///---`       ..://:  .///\r\n	\
+///.  ://///-      -/////////:`      -/////:  .///\r\n	\
+///.  ://:..       .--://///.         ..://:  .///\r\n	\
+///.  .///`           :///-            `///-  .///\r\n	\
+///.   ://:          -//:`             ://:`  .///\r\n	\
+///.   `///:` ..`   `//.         `.. `:///`   .///\r\n	\
+///.    `://////:    ``          ://////:`    .///\r\n	\
+///.      -////:`       ``       `:////-      .///\r\n	\
+///.       `-////:-.`  ://:  `.-:////-`       .///\r\n	\
+///.          .-//////:////://////:.          .///\r\n	\
+///.             `.--::::::::--.`             .///\r\n	\
+///:                                          -///\r\n	\
+.////:--------------------------------------:////.\r\n	\
+ `-://////////////////////////////////////////:-` \r\n");
+
   printf("------------------------------------------\r\n");
   printf("              ENERGY AUDITOR              \r\n");
   printf("           -- GATEWAY NODE 1 --           \r\n");
@@ -750,6 +778,18 @@ int main()
   button_init();
 
   NCPInit();
+
+  struct gecko_msg_flash_ps_load_rsp_t *rsp = gecko_cmd_flash_ps_load(STATE_KEY);
+  if(rsp->result == 0){
+	  if(rsp->value.len == sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING)
+			  && rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING[0]){
+		  int ret = MQTT_RestartReasonPublish(PROXY_IP, PROXY_PORT, getStateStr[rsp->value.data[1]]);
+		  if(ret != 0){
+			  LOG_ERROR("MQTT Restart Reason Publish\r\n");
+		  }
+	  }
+  }
+
   uint8_t err = 0;
   uint32_t time = get_NetworkEpochTime(&err);
   if(err){
@@ -757,11 +797,11 @@ int main()
 	  STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NCP_GETTIME_ERROR;
 	  gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
 			  STATE_AUTO_ENABLE_SENSOR_SAMPLING);
-	  STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
 	  gecko_cmd_system_reset(0);
   }
   printf("Network Time:%lu\r\n",time);
   TimeSet(time);
+
 
 //#define DELAY_TEST	0
 
@@ -928,7 +968,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         			STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NO_RESPONSE;
         			gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
         					STATE_AUTO_ENABLE_SENSOR_SAMPLING);
-        			STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
         			partialNodesRespond = 0;
         			gecko_cmd_system_reset(0);
         		}
@@ -948,7 +987,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 							STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NCP_ERROR;
 							gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
 									STATE_AUTO_ENABLE_SENSOR_SAMPLING);
-							STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = 0;
 							gecko_cmd_system_reset(0);
 
 						}
@@ -987,11 +1025,11 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         if(rsp->result == 0){
         	if(rsp->value.len == sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING)
         			&& rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING[0]){
-        		LOG_INFO("\r\n-*-*-Self Healing Mode-*-*-\r\n**Restart Reason:%s**\r\n",getStateStr[STATE_AUTO_ENABLE_SENSOR_SAMPLING[1]]);
+        		LOG_INFO("\r\n-*-*-Self Healing Mode-*-*-\r\n**Restart Reason:%s**\r\n",getStateStr[rsp->value.data[1]]);
         		gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_OK), STATE_OK);
         		gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
         	}
-        	else if(rsp->value.len == 1 && rsp->value.data[0] == STATE_OK[0]){
+        	else if(rsp->value.len == sizeof(STATE_OK) && rsp->value.data[0] == STATE_OK[0]){
         		publish_SamplingRequest(0, false);
         	}
         }else{
