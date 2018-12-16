@@ -698,6 +698,17 @@ const char *getStateStr[RESTART_REASON_LAST] = {
 	"NCP GET TIME ERROR",
 };
 
+//#if GATEWAY_TYPE == GATEWAY_STANDBY
+//volatile bool standby = true;
+//volatile uint8_t watchActiveGatewayCount = 0;
+//
+//void watchActiveGateway(uint8_t pin)
+//{
+//	__disable_irq();
+//	watchActiveGatewayCount++;
+//	__enable_irq();
+//}
+
 int main()
 {
   // Initialize device
@@ -776,6 +787,26 @@ printf("\
    * */
   led_init();
   button_init();
+
+//  bool standby = true; --- do not proceed from this line
+  //gpio int - count++
+  //rtc int of 5 sec - count--
+  //in RTC - if standby == true; if count === 0 ? standby = false : count--;
+//
+//  if(standby){
+//	  NVIC_ClearPendingIRQ(GPIO_EVEN_IRQn);
+//	  NVIC_EnableIRQ(GPIO_EVEN_IRQn);
+//
+//	  GPIO_ExtIntConfig(gpioPortA, 2, 2, true, true, true);
+//
+//	  /* register the callback function that is invoked when interrupt occurs */
+//	  GPIOINT_CallbackRegister(2, watchActiveGateway);
+//
+//	  while(standby){
+//		  EnterEM2();
+//	  }
+//  }
+
 
   NCPInit();
 

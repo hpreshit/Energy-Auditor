@@ -14,6 +14,11 @@
 
 static volatile uint32_t time_epochTime = 0;
 
+extern volatile bool standby;
+extern volatile uint8_t watchActiveGatewayCount;
+
+static volatile uint8_t count = 0;
+
 void TimeInit()
 {
 	CMU_ClockEnable(cmuClock_RTCC, true);
@@ -46,6 +51,13 @@ void RTCC_IRQHandler()
 		RTCC_IntClear(RTCC_IFC_CC1);
 		RTCC_CounterSet(0);
 		++time_epochTime;
+		if(standby && count == 5){
+			count = 0;
+			((watchActiveGatewayCount == 0) ? standby = false : --watchActiveGatewayCount);
+		}
+		else if(standby){
+			count++;
+		}
 	);
 }
 
