@@ -38,7 +38,7 @@ void NCPInit()
 	}
 	getCmdResponse(resp_buff);
 	LOG_INFO("NCP Details: %s\r\n",resp_buff);
-	DelayS(3);
+	DelayS(5);
 //	set_machine_mode();
 
 	//TODO: connect to which wifi?
@@ -259,6 +259,66 @@ void NCP_FlushRecv()
 	char temp[100];
 	NCP_ReceiveBlocking((uint8_t*)temp, 100);
 }
+
+int MQTT_RestartReasonPublish(char *ip_addr, int port, const char *restartReason)
+{
+	if(restartReason == NULL || ip_addr == NULL){
+		LOG_ERROR("Invalid Params in %s\r\n",__FUNCTION__);
+		while(1);
+	}
+	/*
+	 * TODO:
+	 * Change to multiple functions,
+	 * 1. to open http post stream and return handle
+	 * 2.
+	 */
+	//TODO: return proper error codes
+	size_t data_len;
+	unsigned char uartResponse[30] = {0};
+	char serializedPacket[128]= {0};
+	uint8_t handle = 0;
+
+	size_t packetLen = strlen(restartReason);
+	NCP_ReceiveStart();
+	sprintf((char*)uart_command,"http_post %s:%d -l %lu\r\n",ip_addr,port,packetLen);
+	data_len = strlen((char*)uart_command);
+	DEFINE_NCPDATA(data,uart_command,data_len);
+	NCP_SendData(&data);
+	DelayMS(10);
+	if(getCmdResponse(uartResponse) < 0) return -1;
+
+	DelayMS(10);
+
+	sprintf((char*)uart_command,"write %u %u\r\n",handle,packetLen);
+	data_len = strlen((char*)uart_command);
+	data.bufferLen = data_len;
+	NCP_SendData(&data);
+//	UDELAY_Delay(COMMAND_RESPONSE_DELAY);
+//	if(getCmdResponse(uartResponse) < 0) return -1;
+
+	DelayMS(10);
+
+	sprintf((char*)uart_command,"%s",restartReason);
+	data_len = strlen((char*)uart_command);
+	data.bufferLen = data_len;
+	NCP_SendData(&data);
+	DelayMS(100);
+	if(getCmdResponse(uartResponse) < 0) return -1;
+
+	DelayS(2);
+
+	sprintf((char*)uart_command,"stream_close %d\r\n",handle);
+	data_len = strlen((char*)uart_command);
+	data.bufferLen = data_len;
+	NCP_SendData(&data);
+	DelayMS(100);
+	if(getCmdResponse(uartResponse) < 0) return -1;
+
+	return 0;
+}
+
+
+
 
 
 int MQTT_publish(char *ip_addr, int port, const struct sensorNodeDetails *node_data)

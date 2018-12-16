@@ -19,5 +19,6 @@ void set_machine_mode();
 void NCPInit();
 uint32_t get_NetworkEpochTime();
 int MQTT_publish(char *ip_addr, int port, const struct sensorNodeDetails *node_data);
+int MQTT_RestartReasonPublish(char *ip_addr, int port, const char *restartReason);
 
 #endif /* SRC_NCP_H_ */
