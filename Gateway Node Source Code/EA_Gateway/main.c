@@ -53,7 +53,14 @@
 #include "bspconfig.h"
 #endif
 
+#include "udelay.h"
 #include "mesh_serdeser.h"
+
+#include "SensorNodeObject.h"
+#include "ncp.h"
+#include "time.h"
+#include "mytime.h"
+#include "logger.h"
 
 /***********************************************************************************************//**
  * @addtogroup Application
@@ -230,11 +237,11 @@ void gpioint(uint8_t pin)
   if (pin == BSP_BUTTON0_PIN) {
     if (GPIO_PinInGet(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN) == 0) {
       // PB0 pressed - record RTCC timestamp
-      pb0_press = RTCC_CounterGet();
+      pb0_press = TimeGet();
 //      printf("Time press:%lu\r\n",pb0_press);
     } else {
       // PB0 released - check if it was short or long press
-      t_diff = RTCC_CounterGet() - pb0_press;
+      t_diff = TimeGet() - pb0_press;
 //      printf("Time press diff:%lu (%d)\r\n", t_diff, VERY_LONG_PRESS_TIME_TICKS);
       if(t_diff >= VERY_LONG_PRESS_TIME_TICKS){
         gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
@@ -408,7 +415,7 @@ void publishEpochTime(int retrans)
   struct mesh_generic_request req, req2;
 
   req.kind = mesh_lighting_request_ctl;
-  uint32_t epochTime = RTCC_CounterGet();
+  uint32_t epochTime = TimeGet();
   printf("Sending EpochTime:%lu\r\n",epochTime);
   req.ctl.lightness = (epochTime & 0xFFFF0000) >> 16;
   req.ctl.temperature = 800;
@@ -662,22 +669,18 @@ void initiate_factory_reset(void)
 bool publishedTime = false;
 bool startApplication = false;
 
-#define MAX_SENSOR_NODES 8
-struct sensorNodeDetails{
-	uint32_t sensorNodeIndex;
-	uint8_t btAddr[4];
-	uint32_t epochTime[2];
-	uint16_t currentReading[2];
-	bool staleReading;
-	bool sensorNodeConnected;
-}SensorNodes[MAX_SENSOR_NODES] = {0};
+struct sensorNodeDetails SensorNodes[MAX_SENSOR_NODES] = {0};
 
 #define MAKE_SINDEX(x) ((x-1)>>1)
 #define WAIT_FOR_LAST_RESPONSE_TIME_MS (500)
-#define SENSOR_NODE_DATA_RESPONSE_TIMEOUT_MS	(10000)
+#define SENSOR_NODE_DATA_RESPONSE_TIMEOUT_MS	(5000)
 
 static uint32_t sensorNodeRegisteredCount = 0;
 static uint32_t nodeResponseCount = 0;
+
+#define STATE_KEY 0x4001
+const uint8_t STATE_AUTO_ENABLE_SENSOR_SAMPLING = 10;
+const uint8_t STATE_OK = 5;
 
 int main()
 {
@@ -716,7 +719,6 @@ int main()
 //  gecko_bgapi_class_mesh_friend_init();
 
   gecko_initCoexHAL();
-
   RETARGET_SerialInit();
   printf("\033[2J\033[H");
   printf("*****GATEWAY NODE 1******\r\n");
@@ -728,6 +730,50 @@ int main()
   led_init();
   button_init();
 
+  NCPInit();
+  uint32_t time = get_NetworkEpochTime();
+  printf("Network Time:%lu\r\n",time);
+  TimeSet(time);
+
+//#define DELAY_TEST	0
+
+#ifdef DELAY_TEST
+  while(1){
+	  printf("Counter Time:%lu\r\n",RTCC_CounterGet());
+	  DelayS(2);
+	  printf("Counter Time:%lu\r\n",RTCC_CounterGet());
+	  DelayMS(7850);
+  }
+#endif
+
+//#define NCP_DEBUG
+#ifdef NCP_DEBUG
+  uint32_t SIndex = 0;
+  uint16_t add = 0x7e5b;
+  SensorNodes[SIndex].sensorNodeIndex = SIndex+1;
+  memcpy(&SensorNodes[SIndex].btAddr[0],(uint8_t*)&add,2);
+  memcpy(&SensorNodes[SIndex].btAddr[2],(uint8_t*)&add,2);
+  SensorNodes[SIndex].epochTime[0] = 10;
+  SensorNodes[SIndex].epochTime[1] = 11;
+  SensorNodes[SIndex].currentReading[0] = 5;
+  SensorNodes[SIndex].currentReading[1] = 6;
+  SensorNodes[SIndex].staleReading = true;
+  SensorNodes[SIndex].sensorNodeConnected = false;
+
+  while(1){
+	  MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[0]);
+	  UDELAY_Delay(500000000);
+
+	  SensorNodes[SIndex].sensorNodeIndex = SIndex+2;
+	  SensorNodes[SIndex].currentReading[1] = 7;
+	  MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[0]);
+
+	  SensorNodes[SIndex].sensorNodeIndex = SIndex+3;
+	  SensorNodes[SIndex].currentReading[1] = 8;
+	  MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[0]);
+  }
+  while(1);
+#endif
 //  DI_Init();
 
 #if defined(_SILICON_LABS_32B_SERIES_1_CONFIG_3)
@@ -817,7 +863,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         case TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE:
         {
         	if(sensorNodeRegisteredCount){
-        		printf("T: %lu. No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n",RTCC_CounterGet());
+        		printf("T: %lu. No More responses from Sensor Nodes. Will publish a start to all sensor node.\r\n",TimeGet());
         		publish_SamplingRequest(0, true);
         		startApplication = true;
         	}
@@ -830,9 +876,9 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         case TIMER_ID_SENSOR_RESPONSE_TIMEOUT:
         {
         	if(nodeResponseCount == sensorNodeRegisteredCount){
-        		for(uint8_t i = 0; i<MAX_SENSOR_NODES && SensorNodes[i].sensorNodeIndex; i++){
-        			SensorNodes[i].staleReading = true;
-        		}
+//        		for(uint8_t i = 0; i<MAX_SENSOR_NODES && SensorNodes[i].sensorNodeIndex; i++){
+//        			SensorNodes[i].staleReading = true;
+//        		}
         		printf("Data collected from -ALL- Sensor Nodes.\r\n");
         	}
         	else if(nodeResponseCount < sensorNodeRegisteredCount){
@@ -840,22 +886,39 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         		//Timeout and there are still some nodes left to send out the data
         		//adding a stale/fresh flag along with sensor node connected/disconnected flag
         		printf("Data collected from -SOME- Sensor Nodes. Updating connected flags.\r\n");
-        		for(uint8_t i = 0; (i<MAX_SENSOR_NODES) && (SensorNodes[i].sensorNodeIndex); i++){
-        			if(SensorNodes[i].staleReading){
+        		for(uint8_t i = 0; (i<MAX_SENSOR_NODES); i++){
+        			if((SensorNodes[i].sensorNodeIndex) && SensorNodes[i].staleReading){
         				printf("No response from Sensor Node:%lu\r\n",SensorNodes[i].sensorNodeIndex);
         				SensorNodes[i].sensorNodeConnected = false;
+        			}
+        			else{
+
         			}
         		}
         		partialNodesRespond++;
         		if(partialNodesRespond > 10){
+        			gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_AUTO_ENABLE_SENSOR_SAMPLING);
         			partialNodesRespond = 0;
         			gecko_cmd_system_reset(0);
         		}
         	}
         	nodeResponseCount = 0;
         	printf(">>Pushing to Cloud>>>>>>>>>>>>>>>>>>>>>>>\r\n");
+        	for(uint8_t i = 0; (i<MAX_SENSOR_NODES); i++){
+        		if(SensorNodes[i].sensorNodeIndex > 0){
+	        		printf("--SEND NODE:%lu\r\n",(SensorNodes[i].sensorNodeIndex));
+					int ret = MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[i]);
+					if(ret == -1){
+						//retry one more time
+						ret = MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[i]);
+						if(ret == -1){
+							printf("[ERROR] MQTT PUBLISH\r\n");
+						}
+					}
+					SensorNodes[i].staleReading = true; //consumed by cloud
+        		}
+        	}
         	//printf("_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-\r\n");
-        	//TODO:Set an event or directly call the function to send the data to Cloud
         }
         break;
 
@@ -881,8 +944,23 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         enable_button_interrupts();
         gateway_node_init();
 
-        //DI_Print("provisioned", DI_ROW_STATUS);
-        publish_SamplingRequest(0, false);
+        struct gecko_msg_flash_ps_load_rsp_t *rsp = gecko_cmd_flash_ps_load(STATE_KEY);
+        LOG_DEBUG("PS Result: %u\r\n",rsp->result);
+        if(rsp->result == 0){
+        	if(rsp->value.len == 1 && rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING){
+        		LOG_INFO("Auto Recovery Mode\r\n");
+        		gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_OK);
+        		gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
+        	}
+        	else if(rsp->value.len == 1 && rsp->value.data[0] == STATE_OK){
+        		publish_SamplingRequest(0, false);
+        	}
+        }else{
+        	LOG_INFO("Saving State OK for first time\r\n");
+        	gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_OK);
+        	publish_SamplingRequest(0, false);
+        }
+
       } else {
         printf("node is unprovisioned\r\n");
         //DI_Print("unprovisioned", DI_ROW_STATUS);
@@ -895,28 +973,13 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_system_external_signal_id:
     {
-//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_SHORT_PRESS) {
-////        handle_button_press(0);
-//      }
-//
-//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_SHORT_PRESS) {
-////        handle_button_press(1);
-//      }
-//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_LONG_PRESS) {
-////        handle_long_press(0);
-//      }
-//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_LONG_PRESS) {
-////        handle_long_press(1);
-//      }
       if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB0_VERY_LONG_PRESS) {
     	  printf("Very long press\r\n");
     	  publishEpochTime(0);
     	  publishedTime = true;
-//        handle_very_long_press(0);
+//    	  GPIO_ExtIntConfig(BSP_BUTTON0_PORT, BSP_BUTTON0_PIN, BSP_BUTTON0_PIN, true, true, false);
       }
-//      if (evt->data.evt_system_external_signal.extsignals & EXT_SIGNAL_PB1_VERY_LONG_PRESS) {
-////        handle_very_long_press(1);
-//      }
+
     }
     break;
 
@@ -988,26 +1051,31 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     				printf("[ERROR] Server Index out of Range\r\n");
     				while(1);
     			}
-    			SensorNodes[SIndex].sensorNodeIndex = SIndex+1;
-    			memcpy(&SensorNodes[SIndex].btAddr[0],(uint8_t*)&current.ctl.lightness,2);
-    			memcpy(&SensorNodes[SIndex].btAddr[2],(uint8_t*)&target.ctl.lightness,2);
-    			SensorNodes[SIndex].epochTime[0] = 0;
-    			SensorNodes[SIndex].epochTime[1] = 0;
-    			SensorNodes[SIndex].currentReading[0] = 0;
-    			SensorNodes[SIndex].currentReading[1] = 0;
-    			SensorNodes[SIndex].staleReading = true;
-    			SensorNodes[SIndex].sensorNodeConnected = false;
-    			uint8_t *p_addr = (uint8_t*)&SensorNodes[SIndex].btAddr[0];
-    			printf("Sensor Node %x:%x:%x:%x Registered\r\n",p_addr[3],p_addr[2],p_addr[1],p_addr[0]);
-    			sensorNodeRegisteredCount++;
-    			printf("Node count: %lu. T:%lu\r\n",sensorNodeRegisteredCount,RTCC_CounterGet());
-    			//stop the timer, start the timer with 200ms
-    			gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
-    			result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(WAIT_FOR_LAST_RESPONSE_TIME_MS), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
-    			if (result) {
-    				printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
-    				while(1);
-    			}
+//    			if(SensorNodes[SIndex].sensorNodeIndex == 0){
+					SensorNodes[SIndex].sensorNodeIndex = SIndex+1;
+					memcpy(&SensorNodes[SIndex].btAddr[0],(uint8_t*)&current.ctl.lightness,2);
+					memcpy(&SensorNodes[SIndex].btAddr[2],(uint8_t*)&target.ctl.lightness,2);
+					SensorNodes[SIndex].epochTime[0] = 0;
+					SensorNodes[SIndex].epochTime[1] = 0;
+					SensorNodes[SIndex].currentReading[0] = 0;
+					SensorNodes[SIndex].currentReading[1] = 0;
+					SensorNodes[SIndex].staleReading = true;
+					SensorNodes[SIndex].sensorNodeConnected = false;
+					uint8_t *p_addr = (uint8_t*)&SensorNodes[SIndex].btAddr[0];
+					printf("Sensor Node %x:%x:%x:%x Registered\r\n",p_addr[3],p_addr[2],p_addr[1],p_addr[0]);
+					sensorNodeRegisteredCount++;
+					printf("Node count: %lu. T:%lu\r\n",sensorNodeRegisteredCount,TimeGet());
+					//stop the timer, start the timer with 200ms
+					gecko_cmd_hardware_set_soft_timer(0, TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 0);
+					result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(WAIT_FOR_LAST_RESPONSE_TIME_MS), TIMER_ID_WAIT_FOR_SENSOR_NODE_RESPONSE, 1)->result;
+					if (result) {
+						printf("Setting WAIT FOR SENSOR Timer fail.  %x\r\n", result);
+						while(1);
+					}
+//    			}
+//					else{
+//						LOG_INFO("Skipping Duplicate Sensor Node registration\r\n");
+//					}
     		}
     		else if(startApplication){
     			uint32_t SIndex = MAKE_SINDEX(server_addr);
@@ -1019,7 +1087,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     					uint16_t currentValue = current.ctl.lightness;
     					uint32_t epochTime = target.ctl.lightness;
     					//update the previous reading with the stale latest reading
-    					//update the stale latest reading with the latest reading
+    					//update the stale latest reading with the fresh latest reading
     					SensorNodes[SIndex].currentReading[0] = SensorNodes[SIndex].currentReading[1];
     					SensorNodes[SIndex].currentReading[1] = currentValue;
     					SensorNodes[SIndex].staleReading = false;
@@ -1027,7 +1095,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     					printf("Current: %umA --> %umA\r\n",SensorNodes[SIndex].currentReading[0], SensorNodes[SIndex].currentReading[1]);
     					if(hasTarget){
     						SensorNodes[SIndex].epochTime[0] = SensorNodes[SIndex].epochTime[1];
-    						SensorNodes[SIndex].epochTime[1] = (RTCC_CounterGet()| epochTime);
+    						SensorNodes[SIndex].epochTime[1] = ((TimeGet() & 0xFFFF0000) + epochTime);
 //    						printf("Time Offset: %lu\r\n",epochTime);
     						printf("Epoch Timestamp: %lus --> %lus\r\n}\r\n", SensorNodes[SIndex].epochTime[0], SensorNodes[SIndex].epochTime[1]);
     					}
@@ -1054,7 +1122,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
     			}
     			else{
     				printf("[ERROR] Sensor Node Index out of Range\r\n");
-//    				while(1);
     			}
     		}
     	}
@@ -1077,10 +1144,8 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       printf("evt:gecko_evt_le_connection_opened_id\r\n");
       num_connections++;
       conn_handle = evt->data.evt_le_connection_opened.connection;
-      //DI_Print("connected", DI_ROW_CONNECTION);
       // turn off lpn feature after GATT connection is opened
 //      gecko_cmd_mesh_lpn_deinit();
-//      //DI_Print("LPN off", DI_ROW_LPN);
       break;
 
     case gecko_evt_le_connection_closed_id:
@@ -1094,7 +1159,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
       conn_handle = 0xFF;
       if (num_connections > 0) {
         if (--num_connections == 0) {
-          //DI_Print("", DI_ROW_CONNECTION);
 
 //          lpn_init();
         }
@@ -1138,7 +1202,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_lpn_friendship_failed_id:
       printf("friendship failed\r\n");
-      //DI_Print("no friend", DI_ROW_LPN);
       // try again in 2 seconds
       result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(2000), TIMER_ID_FRIEND_FIND, 1)->result;
       if (result) {
@@ -1148,7 +1211,6 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 
     case gecko_evt_mesh_lpn_friendship_terminated_id:
       printf("friendship terminated\r\n");
-      //DI_Print("friend lost", DI_ROW_LPN);
       if (num_connections == 0) {
         // try again in 2 seconds
         result  = gecko_cmd_hardware_set_soft_timer(TIMER_MS_2_TIMERTICK(2000), TIMER_ID_FRIEND_FIND, 1)->result;

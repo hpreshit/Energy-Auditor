@@ -26,7 +26,7 @@
 #include "em_rtcc.h"
 
 #include "bsp.h"
-
+#include "mytime.h"
 
 static void initMcu_clocks(void);
 
@@ -45,16 +45,18 @@ void initMcu(void)
   // Set up clocks
   initMcu_clocks();
 
-  RTCC_Init_TypeDef rtccInit = RTCC_INIT_DEFAULT;
-  rtccInit.enable                = true;
-  rtccInit.debugRun              = false;
-  rtccInit.precntWrapOnCCV0      = false;
-  rtccInit.cntWrapOnCCV1         = false;
-  rtccInit.prescMode             = rtccCntTickPresc;
-  rtccInit.presc                 = rtccCntPresc_32768;
-  rtccInit.enaOSCFailDetect      = false;
-  rtccInit.cntMode               = rtccCntModeNormal;
-  RTCC_Init(&rtccInit);
+  TimeInit();
+
+//  RTCC_Init_TypeDef rtccInit = RTCC_INIT_DEFAULT;
+//  rtccInit.enable                = true;
+//  rtccInit.debugRun              = false;
+//  rtccInit.precntWrapOnCCV0      = false;
+//  rtccInit.cntWrapOnCCV1         = false;
+//  rtccInit.prescMode             = rtccCntTickPresc;
+//  rtccInit.presc                 = rtccCntPresc_1;
+//  rtccInit.enaOSCFailDetect      = false;
+//  rtccInit.cntMode               = rtccCntModeNormal;
+//  RTCC_Init(&rtccInit);
 
 #if defined(_EMU_CMD_EM01VSCALE0_MASK)
   // Set up EM0, EM1 energy mode configuration
