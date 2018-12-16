@@ -141,7 +141,7 @@ uint8_t NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count)
         }
         DelayMS(20);
         retry++;
-        if(retry > 100){
+        if(retry > 500){
         	LOG_DEBUG("%s taking too long\r\n",__FUNCTION__);
         	return retry;
         }

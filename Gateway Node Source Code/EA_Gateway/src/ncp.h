@@ -10,8 +10,9 @@
 
 #include "SensorNodeObject.h"
 
-//#define PROXY_IP					"10.0.0.144"
-#define PROXY_IP					"10.0.0.200"
+//#define PROXY_IP					"10.0.0.144"	//gunj laptop
+//#define PROXY_IP					"10.0.0.200"	//aakash laptop
+#define PROXY_IP					"10.0.0.215"	//pi
 #define PROXY_PORT					8000
 
 void NCP_FlushRecv();
