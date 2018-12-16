@@ -104,7 +104,7 @@
   <widget class="QLabel" name="node1TimeLabel">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>105</x>
      <y>255</y>
      <width>51</width>
      <height>51</height>
@@ -120,9 +120,9 @@
   <widget class="QLineEdit" name="node1TimeDisplay">
    <property name="geometry">
     <rect>
-     <x>75</x>
+     <x>60</x>
      <y>315</y>
-     <width>111</width>
+     <width>141</width>
      <height>31</height>
     </rect>
    </property>
@@ -202,9 +202,9 @@
   <widget class="QLineEdit" name="node2TimeDisplay">
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>320</x>
      <y>320</y>
-     <width>111</width>
+     <width>141</width>
      <height>31</height>
     </rect>
    </property>
@@ -220,9 +220,9 @@
   <widget class="QLineEdit" name="node3TimeDisplay">
    <property name="geometry">
     <rect>
-     <x>575</x>
+     <x>565</x>
      <y>315</y>
-     <width>111</width>
+     <width>141</width>
      <height>31</height>
     </rect>
    </property>
@@ -238,20 +238,20 @@
   <widget class="QLabel" name="applicationLogo">
    <property name="geometry">
     <rect>
-     <x>295</x>
+     <x>290</x>
      <y>20</y>
      <width>193</width>
      <height>111</height>
     </rect>
    </property>
    <property name="frameShape">
-    <enum>QFrame::Panel</enum>
+    <enum>QFrame::NoFrame</enum>
    </property>
    <property name="frameShadow">
-    <enum>QFrame::Raised</enum>
+    <enum>QFrame::Plain</enum>
    </property>
    <property name="lineWidth">
-    <number>2</number>
+    <number>1</number>
    </property>
    <property name="text">
     <string/>
@@ -266,7 +266,7 @@
   <widget class="QLabel" name="node2TimeLabel">
    <property name="geometry">
     <rect>
-     <x>370</x>
+     <x>365</x>
      <y>260</y>
      <width>51</width>
      <height>51</height>
@@ -324,16 +324,16 @@
   <widget class="QLabel" name="node1Label">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>20</x>
      <y>155</y>
-     <width>201</width>
+     <width>211</width>
      <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Comic Sans MS</family>
-     <pointsize>12</pointsize>
+     <pointsize>11</pointsize>
      <weight>75</weight>
      <italic>false</italic>
      <bold>true</bold>
@@ -352,7 +352,7 @@
   <widget class="Line" name="line">
    <property name="geometry">
     <rect>
-     <x>260</x>
+     <x>245</x>
      <y>140</y>
      <width>20</width>
      <height>351</height>
@@ -365,7 +365,7 @@
   <widget class="Line" name="line_2">
    <property name="geometry">
     <rect>
-     <x>510</x>
+     <x>500</x>
      <y>140</y>
      <width>20</width>
      <height>351</height>
@@ -404,16 +404,16 @@
   <widget class="QLabel" name="node2Label">
    <property name="geometry">
     <rect>
-     <x>290</x>
+     <x>275</x>
      <y>155</y>
-     <width>201</width>
+     <width>211</width>
      <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Comic Sans MS</family>
-     <pointsize>12</pointsize>
+     <pointsize>11</pointsize>
      <weight>75</weight>
      <italic>false</italic>
      <bold>true</bold>
@@ -434,14 +434,14 @@
     <rect>
      <x>530</x>
      <y>155</y>
-     <width>201</width>
+     <width>211</width>
      <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>Comic Sans MS</family>
-     <pointsize>12</pointsize>
+     <pointsize>11</pointsize>
      <weight>75</weight>
      <italic>false</italic>
      <bold>true</bold>
@@ -460,7 +460,7 @@
   <widget class="QLabel" name="node2CurrentLabel">
    <property name="geometry">
     <rect>
-     <x>325</x>
+     <x>300</x>
      <y>382</y>
      <width>46</width>
      <height>41</height>
@@ -488,7 +488,7 @@
   <widget class="QLabel" name="node2PowerLabel">
    <property name="geometry">
     <rect>
-     <x>430</x>
+     <x>420</x>
      <y>375</y>
      <width>51</width>
      <height>51</height>
@@ -513,7 +513,7 @@
   <widget class="QLabel" name="node3CurrentLabel">
    <property name="geometry">
     <rect>
-     <x>555</x>
+     <x>550</x>
      <y>382</y>
      <width>46</width>
      <height>41</height>
@@ -541,7 +541,7 @@
   <widget class="QLabel" name="node3PowerLabel">
    <property name="geometry">
     <rect>
-     <x>655</x>
+     <x>670</x>
      <y>375</y>
      <width>51</width>
      <height>51</height>
@@ -566,7 +566,7 @@
   <widget class="QLabel" name="node1CurrentLabel">
    <property name="geometry">
     <rect>
-     <x>55</x>
+     <x>45</x>
      <y>382</y>
      <width>46</width>
      <height>41</height>
@@ -594,7 +594,7 @@
   <widget class="QLabel" name="node1PowerLabel">
    <property name="geometry">
     <rect>
-     <x>155</x>
+     <x>165</x>
      <y>375</y>
      <width>51</width>
      <height>51</height>
@@ -637,7 +637,7 @@
   <widget class="QLineEdit" name="node2AddressDisplay">
    <property name="geometry">
     <rect>
-     <x>340</x>
+     <x>330</x>
      <y>200</y>
      <width>111</width>
      <height>31</height>
@@ -673,9 +673,9 @@
   <widget class="QLineEdit" name="node1CurrentDisplay">
    <property name="geometry">
     <rect>
-     <x>35</x>
+     <x>15</x>
      <y>430</y>
-     <width>81</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -693,7 +693,7 @@
     <rect>
      <x>140</x>
      <y>430</y>
-     <width>81</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -709,9 +709,9 @@
   <widget class="QLineEdit" name="node2CurrentDisplay">
    <property name="geometry">
     <rect>
-     <x>300</x>
+     <x>270</x>
      <y>430</y>
-     <width>91</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -727,9 +727,9 @@
   <widget class="QLineEdit" name="node2PowerDisplay">
    <property name="geometry">
     <rect>
-     <x>415</x>
+     <x>395</x>
      <y>430</y>
-     <width>81</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -745,9 +745,9 @@
   <widget class="QLineEdit" name="node3CurrentDisplay">
    <property name="geometry">
     <rect>
-     <x>535</x>
+     <x>525</x>
      <y>430</y>
-     <width>81</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -763,9 +763,9 @@
   <widget class="QLineEdit" name="node3PowerDisplay">
    <property name="geometry">
     <rect>
-     <x>640</x>
+     <x>645</x>
      <y>430</y>
-     <width>81</width>
+     <width>101</width>
      <height>31</height>
     </rect>
    </property>
@@ -773,6 +773,53 @@
     <font>
      <family>Sans Serif</family>
     </font>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>600</y>
+     <width>321</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Box</enum>
+   </property>
+   <property name="text">
+    <string>Documentation: https://github.com/hpreshit/Energy-Auditor</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="applicationLogo_2">
+   <property name="geometry">
+    <rect>
+     <x>640</x>
+     <y>40</y>
+     <width>111</width>
+     <height>91</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::NoFrame</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Plain</enum>
+   </property>
+   <property name="lineWidth">
+    <number>1</number>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>../../../../Downloads/rsz_rsz_11rsz_culogo.png</pixmap>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
