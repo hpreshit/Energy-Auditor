@@ -379,4 +379,3 @@ class Ui_EnergyAuditor(object):
         self.node3Label.setText(_translate("EnergyAuditor", "SENSOR NODE"))
         self.documentationLink.setText(_translate("EnergyAuditor", "https://github.com/hpreshit/Energy-Auditor"))
         self.elapsedTimeLabel.setText(_translate("EnergyAuditor", "Time Elapsed"))
-
