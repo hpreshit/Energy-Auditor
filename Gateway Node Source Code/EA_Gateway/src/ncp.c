@@ -38,7 +38,7 @@ void NCPInit()
 	}
 	getCmdResponse(resp_buff);
 	LOG_INFO("NCP Details: %s\r\n",resp_buff);
-	DelayS(5);
+	DelayS(3);
 //	set_machine_mode();
 
 	//TODO: connect to which wifi?
@@ -186,7 +186,7 @@ void set_machine_mode()
 
 }
 
-uint32_t get_NetworkEpochTime()
+uint32_t get_NetworkEpochTime(uint8_t *err)
 {
 	size_t command_len;
 	unsigned char buffer[30] = {0};
@@ -199,8 +199,11 @@ uint32_t get_NetworkEpochTime()
 	DelayS(2);
 	if(getCmdResponse(buffer) < 0){
 		LOG_ERROR("Get EpochTime\r\n");
+		*err = 1;
 	}
-
+	else{
+		*err = 0;
+	}
 	return (uint32_t)strtoumax((char*)buffer,NULL,10);
 }
 
@@ -208,7 +211,9 @@ int getCmdResponse(unsigned char* uart_reponse)
 {
     uint8_t header[16] = { 0 };
 
-    NCP_ReceiveBlocking(header, 9);
+    if(NCP_ReceiveBlocking(header, 9)){
+    	return -1;
+    }
 
     if(header[0] == 'R')
     {
@@ -222,11 +227,14 @@ int getCmdResponse(unsigned char* uart_reponse)
                 unsigned char temp[2];
 
                 // read the data (without the trailing /r/n)
-                NCP_ReceiveBlocking(uart_reponse, len - 2);
+                if(NCP_ReceiveBlocking(uart_reponse, len - 2)){
+                	return -1;
+                }
 
                 // cleanup the trailing /r/n
-                NCP_ReceiveBlocking(temp, 2);
-
+                if(NCP_ReceiveBlocking(temp, 2)){
+                	return -1;
+                }
                 // return actual data length
                 return len - 2;
             }
@@ -302,7 +310,7 @@ int MQTT_publish(char *ip_addr, int port, const struct sensorNodeDetails *node_d
 	data.bufferLen = data_len;
 	NCP_SendData(&data);
 	DelayMS(100);
-	getCmdResponse(uartResponse); //return -1;
+	if(getCmdResponse(uartResponse) < 0) return -1;
 
 	DelayS(2);
 

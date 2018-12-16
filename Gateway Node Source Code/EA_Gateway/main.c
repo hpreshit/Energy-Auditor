@@ -731,7 +731,12 @@ int main()
   button_init();
 
   NCPInit();
-  uint32_t time = get_NetworkEpochTime();
+  uint8_t err = 0;
+  uint32_t time = get_NetworkEpochTime(&err);
+  if(err){
+	  LOG_ERROR("NCP Time. Restarting...\r\n");
+	  gecko_cmd_system_reset(0);
+  }
   printf("Network Time:%lu\r\n",time);
   TimeSet(time);
 
@@ -909,10 +914,14 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
 	        		printf("--SEND NODE:%lu\r\n",(SensorNodes[i].sensorNodeIndex));
 					int ret = MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[i]);
 					if(ret == -1){
+						NCPInit();
 						//retry one more time
 						ret = MQTT_publish(PROXY_IP, PROXY_PORT, &SensorNodes[i]);
 						if(ret == -1){
 							printf("[ERROR] MQTT PUBLISH\r\n");
+							gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_AUTO_ENABLE_SENSOR_SAMPLING);
+							gecko_cmd_system_reset(0);
+
 						}
 					}
 					SensorNodes[i].staleReading = true; //consumed by cloud
@@ -948,7 +957,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         LOG_DEBUG("PS Result: %u\r\n",rsp->result);
         if(rsp->result == 0){
         	if(rsp->value.len == 1 && rsp->value.data[0] == STATE_AUTO_ENABLE_SENSOR_SAMPLING){
-        		LOG_INFO("Auto Recovery Mode\r\n");
+        		LOG_INFO("Self Healing Mode\r\n");
         		gecko_cmd_flash_ps_save(STATE_KEY, 1, &STATE_OK);
         		gecko_external_signal(EXT_SIGNAL_PB0_VERY_LONG_PRESS);
         	}

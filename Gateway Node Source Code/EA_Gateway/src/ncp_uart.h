@@ -20,6 +20,6 @@ struct NCPData{
 
 void NCP_UARTInit();
 void NCP_SendData(struct NCPData *data);
-void NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count);
+uint8_t NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count);
 
 #endif /* SRC_NCP_UART_H_ */

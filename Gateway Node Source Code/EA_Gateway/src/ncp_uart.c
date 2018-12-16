@@ -108,7 +108,7 @@ void NCP_ReceiveStart()
 	UARTDRV_Receive(uart_handle, uart_rx_fifo, UART_RX_FIFO_SIZE, uartRxCallback);
 }
 
-void NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count)
+uint8_t NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count)
 {
     static UARTDRV_Count_t consumed = 0;
 
@@ -141,10 +141,12 @@ void NCP_ReceiveBlocking(uint8_t *data, UARTDRV_Count_t count)
         }
         DelayMS(20);
         retry++;
-        if(retry > 50){
+        if(retry > 100){
         	LOG_DEBUG("%s taking too long\r\n",__FUNCTION__);
-        	retry = 0;
+        	return retry;
         }
     } while(true /*&& retry < 200*/);
+
+    return 0;
 
 }
