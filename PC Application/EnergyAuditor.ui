@@ -819,7 +819,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>../../../../Downloads/rsz_rsz_11rsz_culogo.png</pixmap>
+    <pixmap>Images/culogo.png</pixmap>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
