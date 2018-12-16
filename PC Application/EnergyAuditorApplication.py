@@ -180,7 +180,7 @@ class Main(QDialog):
                 self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' W')
             else:
                 self.ui.node1Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node1AddressDisplay.setText('')
+                self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText('')
                 self.ui.node1CurrentDisplay.setText('')
                 self.ui.node1PowerDisplay.setText('')
@@ -195,7 +195,7 @@ class Main(QDialog):
                 self.ui.node2PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[1]])+' W')
             else:
                 self.ui.node2Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node2AddressDisplay.setText('')
+                self.ui.node2AddressDisplay.setText(str(dict_data_btaddr[keys_list[1]]))
                 self.ui.node2TimeDisplay.setText('')
                 self.ui.node2CurrentDisplay.setText('')
                 self.ui.node2PowerDisplay.setText('')
@@ -209,12 +209,12 @@ class Main(QDialog):
                 self.ui.node3PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[2]])+' W')
             else:
                 self.ui.node3Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node3AddressDisplay.setText('')
+                self.ui.node3AddressDisplay.setText(str(dict_data_btaddr[keys_list[2]]))
                 self.ui.node3TimeDisplay.setText('')
                 self.ui.node3CurrentDisplay.setText('')
                 self.ui.node3PowerDisplay.setText('')
 
-        elif len(data_dict.keys()) == 2:
+        elif len(keys_list) == 2:
             if dict_nodeconnected[keys_list[0]] == 1:
                 self.ui.node1_Number.display(dict_node_number[keys_list[0]])
                 self.ui.node1Status.setStyleSheet("background-color: rgb(0, 255, 0);")
@@ -224,7 +224,7 @@ class Main(QDialog):
                 self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' W')
             else:
                 self.ui.node1Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node1AddressDisplay.setText('')
+                self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText('')
                 self.ui.node1CurrentDisplay.setText('')
                 self.ui.node1PowerDisplay.setText('')
@@ -239,12 +239,12 @@ class Main(QDialog):
                 self.ui.node2PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[1]])+' W')
             else:
                 self.ui.node2Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node2AddressDisplay.setText('')
+                self.ui.node2AddressDisplay.setText(str(dict_data_btaddr[keys_list[1]]))
                 self.ui.node2TimeDisplay.setText('')
                 self.ui.node2CurrentDisplay.setText('')
                 self.ui.node2PowerDisplay.setText('')
 
-        elif len(data_dict.keys()) == 1:
+        elif len(keys_list) == 1:
             if dict_nodeconnected[keys_list[0]] == 1:
                 self.ui.node1_Number.display(dict_node_number[keys_list[0]])
                 self.ui.node1Status.setStyleSheet("background-color: rgb(0, 255, 0);")
@@ -254,7 +254,7 @@ class Main(QDialog):
                 self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' W')
             else:
                 self.ui.node1Status.setStyleSheet("background-color: rgb(255, 0, 0);")
-                self.ui.node1AddressDisplay.setText('')
+                self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText('')
                 self.ui.node1CurrentDisplay.setText('')
                 self.ui.node1PowerDisplay.setText('')
@@ -263,8 +263,7 @@ class Main(QDialog):
         global dict_ts, dict_sorted_ts, dict_currentmA,  dict_powerW, dict_connected, dict_stale_read, dict_energy, data_dict_1, data_1
         j=0
         length_keys = len(data_dict_1.keys())
-        for data_1['nodeId'] in data_dict_1.keys():
-
+        for data_1['nodeId'] in sorted(data_dict_1.keys()):
             # plt.subplot(math.floor(length_keys/2.5),math.floor(length_keys/2.5),j+1)
             plt.subplot(3,1,j+1)
             dict_ts_values = list(dict_sorted_ts.values())
