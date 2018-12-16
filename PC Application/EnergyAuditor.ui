@@ -332,7 +332,7 @@
     <rect>
      <x>30</x>
      <y>155</y>
-     <width>191</width>
+     <width>151</width>
      <height>31</height>
     </rect>
    </property>
@@ -352,7 +352,7 @@
     <enum>QFrame::Raised</enum>
    </property>
    <property name="text">
-    <string>SENSOR NODE 1</string>
+    <string>SENSOR NODE</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -415,7 +415,7 @@
     <rect>
      <x>285</x>
      <y>155</y>
-     <width>191</width>
+     <width>161</width>
      <height>31</height>
     </rect>
    </property>
@@ -435,7 +435,7 @@
     <enum>QFrame::Raised</enum>
    </property>
    <property name="text">
-    <string>SENSOR NODE 2</string>
+    <string>SENSOR NODE</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -446,7 +446,7 @@
     <rect>
      <x>540</x>
      <y>155</y>
-     <width>191</width>
+     <width>151</width>
      <height>31</height>
     </rect>
    </property>
@@ -466,7 +466,7 @@
     <enum>QFrame::Raised</enum>
    </property>
    <property name="text">
-    <string>SENSOR NODE 3</string>
+    <string>SENSOR NODE</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -888,6 +888,57 @@
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="node1_Number">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>155</y>
+     <width>21</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="digitCount">
+    <number>1</number>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+   <property name="intValue" stdset="0">
+    <number>0</number>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="node2_Number">
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>155</y>
+     <width>21</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="digitCount">
+    <number>1</number>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
+   </property>
+  </widget>
+  <widget class="QLCDNumber" name="node3_Number">
+   <property name="geometry">
+    <rect>
+     <x>700</x>
+     <y>155</y>
+     <width>21</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="digitCount">
+    <number>1</number>
+   </property>
+   <property name="segmentStyle">
+    <enum>QLCDNumber::Flat</enum>
    </property>
   </widget>
  </widget>
