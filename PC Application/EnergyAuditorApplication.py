@@ -2,6 +2,7 @@
 import sys
 from PyQt5 import QtWidgets, QtCore, QtGui
 from PyQt5.QtWidgets import QDialog, QApplication
+from PyQt5.QtCore import QTimer,QTime,QThread,QEventLoop
 
 from EnergyAuditor import Ui_EnergyAuditor
 
@@ -30,8 +31,11 @@ class Main(QDialog):
         self.ui.refreshButton.clicked.connect(self.get_values)
         self.ui.graphButton.clicked.connect(self.plot_graph)
         self.ui.exitButton.clicked.connect(self.close)
+        self.ui.documentationLink.setOpenExternalLinks(True)
+        self.ui.documentationLink.setText("<a href='https://github.com/hpreshit/Energy-Auditor'>Documentation Link</a>");
 
-        global table
+        global table, counter
+        counter = 0
         dynamodb_session = Session(aws_access_key_id=''.join(access_key_id),
                   aws_secret_access_key=''.join(secret_access_key),
                   region_name=''.join(region))
@@ -40,8 +44,22 @@ class Main(QDialog):
 
         table = dynamodb.Table('energy_auditor_data_log')
 
+    def startTimer(self):
+        self.timer1=QTimer()
+        self.timer1.timeout.connect(self.get_values)
+        self.timer1.start(120000)
+        self.timer2=QTimer()
+        self.timer2.timeout.connect(self.update_counter)
+        self.timer2.start(1000)
+
+    def update_counter(self):
+        global counter
+        counter = counter + 1
+        self.ui.elapsedTime.display(counter)
+
     def get_values(self):
-        global dict_ts, dict_currentmA, dict_powermW, dict_connected, dict_stale_read, dict_energy, data_dict, table, data
+        self.startTimer()
+        global dict_ts, dict_currentmA,  dict_powerW, dict_connected, dict_stale_read, dict_energy, data_dict, table, data
         self.ui.sensorStatus.setStyleSheet("background-color: rgb(0, 255, 0);")
         response = table.scan(Limit=200)
         # print("Count: ",response['Count'])
@@ -49,19 +67,19 @@ class Main(QDialog):
         data_dict = defaultdict(list)
 
         for data in datas:
-            print(data)
+            # print(data)
             data_dict[data['nodeId']].append((data['payload']['ts'],data['payload']['current'],data['payload']['connected'],data['payload']['stale_read'],data['payload']['btaddr']))
 
         dict_ts = {}
         dict_currentmA = {}
-        dict_powermW = {}
+        dict_powerW = {}
         dict_connected = {}
         dict_stale_read = {}
         dict_energy = {}
         dict_nodeconnected = {}
         dict_latest_currentmA = {}
         dict_latest_ts = {}
-        dict_latest_powermW = {}
+        dict_latest_energy_WHr = {}
         dict_data_btaddr ={}
 
         latest_currentmA = []
@@ -74,7 +92,7 @@ class Main(QDialog):
             data_value = data_dict[data['nodeId']]
             ts = []
             current_mA = []
-            power_mW = []
+            power_watt = []
             connect_status = []
             bt_addr = []
 
@@ -96,29 +114,30 @@ class Main(QDialog):
 
             dict_ts[data['nodeId']]=(ts)
             dict_currentmA[data['nodeId']]=(current_mA)
-            power_mW = [i * 120/1000 for i in current_mA]
-            dict_powermW[data['nodeId']]=(power_mW)
-
-            dict_powermW_values = dict_powermW[data['nodeId']]
-            # print(dict_powermW_values)
+            # print(current_mA)
+            power_watt = [i * (120/1000) for i in current_mA]
+            # print(power_watt)
+            dict_powerW[data['nodeId']]=(power_watt)
+            # print( power_watt)
             energy_values = []
-            for i in range(len(dict_powermW_values)):
+            for i in range(len( power_watt)):
                 if i is 0:
-                    energy_values.append(dict_powermW_values[i])
+                    energy_values.append( power_watt[i])
                 else:
-                    energy_values.append(dict_powermW_values[i]+dict_powermW_values[i-1])
+                    energy_values.append( power_watt[i]+ energy_values[i-1])
 
+            # print(energy_values)
             dict_energy[data['nodeId']] = energy_values
-            latest_currentmA.append(current_mA[len(current_mA)-1])
-            latest_ts.append(ts[len(ts)-1])
-            latest_powermW.append(power_mW[len(power_mW)-1])
-            data_connected.append(connect_status[len(connect_status)-1])
-            data_btaddr.append(bt_addr[len(bt_addr)-1])
-            dict_nodeconnected[data['nodeId']] = data_connected[len(data_connected)-1]
-            dict_latest_currentmA[data['nodeId']] = latest_currentmA[len(latest_currentmA)-1]
-            dict_latest_ts[data['nodeId']] = latest_ts[len(latest_ts)-1]
-            dict_latest_powermW[data['nodeId']] = latest_powermW[len(latest_powermW)-1]
-            dict_data_btaddr[data['nodeId']] = data_btaddr[len(data_btaddr)-1]
+            # latest_currentmA.append(current_mA[len(current_mA)-1])
+            # latest_ts.append(ts[len(ts)-1])
+            # latest_powermW.append(power_watt[len(power_watt)-1])
+            # data_connected.append(connect_status[len(connect_status)-1])
+            # data_btaddr.append(bt_addr[len(bt_addr)-1])
+            dict_nodeconnected[data['nodeId']] = connect_status[len(connect_status)-1]
+            dict_latest_currentmA[data['nodeId']] = current_mA[len(current_mA)-1]
+            dict_latest_ts[data['nodeId']] = ts[len(ts)-1]
+            dict_latest_energy_WHr[data['nodeId']] = round((energy_values[len(energy_values)-1]/120),2)
+            dict_data_btaddr[data['nodeId']] = bt_addr[len(bt_addr)-1]
             # print(type(data['nodeId']))
             # print(latest_currentmA)
 
@@ -131,46 +150,46 @@ class Main(QDialog):
                 self.ui.node1Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText(str(dict_latest_ts[keys_list[0]]))
-                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]]))
-                self.ui.node1PowerDisplay.setText(str(dict_latest_powermW[keys_list[0]]))
+                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]])+' mA')
+                self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' Wh')
 
             if dict_nodeconnected[keys_list[1]] == 1:
                 self.ui.node2Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node2AddressDisplay.setText(str(dict_data_btaddr[keys_list[1]]))
                 self.ui.node2TimeDisplay.setText(str(dict_latest_ts[keys_list[1]]))
-                self.ui.node2CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[1]]))
-                self.ui.node2PowerDisplay.setText(str(dict_latest_powermW[keys_list[1]]))
+                self.ui.node2CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[1]])+' mA')
+                self.ui.node2PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[1]])+' Wh')
             if dict_nodeconnected[keys_list[2]] == 1:
                 self.ui.node3Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node3AddressDisplay.setText(str(dict_data_btaddr[keys_list[2]]))
                 self.ui.node3TimeDisplay.setText(str(dict_latest_ts[keys_list[2]]))
-                self.ui.node3CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[2]]))
-                self.ui.node3PowerDisplay.setText(str(dict_latest_powermW[keys_list[2]]))
+                self.ui.node3CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[2]])+' mA')
+                self.ui.node3PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[2]])+' Wh')
         elif len(data_dict.keys()) == 2:
             # print(dict_nodeconnected[keys_list[0]])
             if dict_nodeconnected[keys_list[0]] == 1:
                 self.ui.node1Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText(str(dict_latest_ts[keys_list[0]]))
-                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]]))
-                self.ui.node1PowerDisplay.setText(str(dict_latest_powermW[keys_list[0]]))
+                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]])+' mA')
+                self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' Wh')
 
             if dict_nodeconnected[keys_list[1]] == 1:
                 self.ui.node2Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node2AddressDisplay.setText(str(dict_data_btaddr[keys_list[1]]))
                 self.ui.node2TimeDisplay.setText(str(dict_latest_ts[keys_list[1]]))
-                self.ui.node2CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[1]]))
-                self.ui.node2PowerDisplay.setText(str(dict_latest_powermW[keys_list[1]]))
+                self.ui.node2CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[1]])+' mA')
+                self.ui.node2PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[1]])+' Wh')
         else:
             if dict_nodeconnected[keys_list[0]] == 1:
                 self.ui.node1Status.setStyleSheet("background-color: rgb(0, 255, 0);")
                 self.ui.node1AddressDisplay.setText(str(dict_data_btaddr[keys_list[0]]))
                 self.ui.node1TimeDisplay.setText(str(dict_latest_ts[keys_list[0]]))
-                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]]))
-                self.ui.node1PowerDisplay.setText(str(dict_latest_powermW[keys_list[0]]))
+                self.ui.node1CurrentDisplay.setText(str(dict_latest_currentmA[keys_list[0]])+' mA')
+                self.ui.node1PowerDisplay.setText(str(dict_latest_energy_WHr[keys_list[0]])+' Wh')
 
     def plot_graph(self):
-        global dict_ts, dict_currentmA, dict_powermW, dict_connected, dict_stale_read, dict_energy, data_dict, data
+        global dict_ts, dict_currentmA,  dict_powerW, dict_connected, dict_stale_read, dict_energy, data_dict, data
         j=0
         length_keys = len(data_dict.keys())
         for data['nodeId'] in data_dict.keys():
