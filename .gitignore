@@ -7,3 +7,6 @@
 Gateway/__Previews/Gateway.PcbDocPreview
 Gateway/__Previews/*.PcbDocPreview
 PC Application/config_aws.py
+PC Application/__pycache__/config_aws.cpython-37.pyc
+PC Application/__pycache__/EnergyAuditor.cpython-37.pyc
+**/__pycache__/
