@@ -12,7 +12,8 @@
 
 //#define PROXY_IP					"10.0.0.144"	//gunj laptop
 //#define PROXY_IP					"10.0.0.200"	//aakash laptop
-#define PROXY_IP					"10.0.0.215"	//pi
+#define PROXY_IP					"192.168.137.100"	//aakash laptop
+//#define PROXY_IP					"192.168.137.31"	//pi
 #define PROXY_PORT					8000
 
 void NCP_FlushRecv();

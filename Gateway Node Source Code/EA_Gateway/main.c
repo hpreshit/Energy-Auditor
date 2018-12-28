@@ -995,7 +995,7 @@ static void handle_gecko_event(uint32_t evt_id, struct gecko_cmd_packet *evt)
         			}
         		}
         		partialNodesRespond++;
-        		if(partialNodesRespond > 4){
+        		if(partialNodesRespond > 20){
         			STATE_AUTO_ENABLE_SENSOR_SAMPLING[1] = RESTART_REASON_NO_RESPONSE;
         			gecko_cmd_flash_ps_save(STATE_KEY, sizeof(STATE_AUTO_ENABLE_SENSOR_SAMPLING),
         					STATE_AUTO_ENABLE_SENSOR_SAMPLING);
