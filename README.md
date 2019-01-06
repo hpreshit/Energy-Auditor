@@ -3,9 +3,8 @@
 </p>  
 
 ## Low Power Embedded Design Techniques Course Project - University of Colorado Boulder
-## Sensor Node Team  
+## Team  
 ###  Gunj Manseta  |  Preshit Harlikar  
-## Gateway Node Team  
 ###  Aakash Kumar  |  Ashish Tak  |  Smitesh Modak  
   
  
