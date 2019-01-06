@@ -1,6 +1,14 @@
-# Energy Auditor
+<p align="center">
+ <img src="https://github.com/hpreshit/Energy-Auditor/blob/master/PC%20Application/Images/energyAuditor.png" title="logo" alt="Energy Auditor Logo">
+</p>  
 
-## Low Power Embedded Design Techniques Course Project  
+## Low Power Embedded Design Techniques Course Project - University of Colorado Boulder
+## Sensor Node Team  
+###  Gunj Manseta  |  Preshit Harlikar  
+## Gateway Node Team  
+###  Aakash Kumar  |  Ashish Tak  |  Smitesh Modak  
+  
+ 
 ## Project Idea  
 We intend to build an Energy Auditing System through a combination of Bluetooth mesh
 sensor nodes and a Gateway. The system will gather all the sensor node information and
@@ -19,12 +27,12 @@ erroneous calculation of the baseline, which in turns affects all other energy c
 calculations. Setting up wired metering infrastructure for such temporary measurements
 would be very tedious and labor intensive. Our project will help setup temporary metering
 infrastructure that is not labor intensive to setup due to it being wireless and noninvasive.
+  
+## System Block Diagram
+![System Block Diagram](https://github.com/hpreshit/Energy-Auditor/blob/master/Final%20Report%20Content/Diagrams/SystemBD.jpg)
 
-## Sensor Node Team  
-  Gunj Manseta  
-  Preshit Harlikar  
+## Sensor Node Block Diagram
+![System Block Diagram](https://github.com/hpreshit/Energy-Auditor/blob/master/Final%20Report%20Content/Diagrams/SensorNode_SW_BD.jpg)
 
-## Gateway Node Team  
-  Aakash Kumar  
-  Ashish Tak  
-  Smitesh Modak  
+## Gateway Node Block Diagram
+![System Block Diagram](https://github.com/hpreshit/Energy-Auditor/blob/master/Final%20Report%20Content/Diagrams/Gateway_SW_BD.jpg)
